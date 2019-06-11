@@ -25,9 +25,9 @@ export import_data,
 
     # unit.jl
     plot_unit_cor,
-    get_unit_idx,
-
-    # util_plot.jl
+    get_idx_unit,
+    get_idx_t,
+    get_data,
     highlight_stim,
 
     # single_unit.jl
@@ -36,6 +36,8 @@ export import_data,
 
     # multivar.jl
     pca,
-    plot_statespace_component
-    
+    plot_statespace_component,
+    plot_statespace_3d,
+    plot_pca_var
+
 end # module

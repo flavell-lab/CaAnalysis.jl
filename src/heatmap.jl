@@ -33,9 +33,10 @@ function plot_cluster_cost(f::Array{T,2}, n=20) where T
     nothing
 end
 
-function plot_cluster_cost(data_dict::Dict, n=20;
-    idx_unit=:ok, data_key="f_bleach")
-    f = data_dict[data_key][get_unit_idx(data_dict, idx_unit), :]
+function plot_cluster_cost(data_dict::Dict, n=20; data_key="f_bleach",
+    idx_unit=:ok, idx_t=:all)
+    f = get_data(data_dict, data_key=data_key, idx_unit=idx_unit,
+        idx_t=idx_t)
 
     plot_cluster_cost(f, n)
 
@@ -66,11 +67,12 @@ function plot_heatmap(f::Array{T,2}, n=10; vmin=0.5, vmax=1.5,
     nothing
 end
 
-function plot_heatmap(data_dict, n=10;
-    vmin=0.5, vmax=1.5, cmap="magma", idx_unit=:ok, data_key="f_bleach")
-    f = data_dict[data_key][get_unit_idx(data_dict, idx_unit), :]
+function plot_heatmap(data_dict, n=10; cmap="magma", data_key="f_bleach",
+    idx_unit=:ok, idx_t=:all, vmin=0.5, vmax=1.5, vol_rate=0.75)
+    f = get_data(data_dict, data_key=data_key, idx_unit=idx_unit,
+        idx_t=idx_t)
 
-    plot_heatmap(f, n; vmin=vmin, vmax=vmax, cmap=cmap)
+    plot_heatmap(f, n; vmin=vmin, vmax=vmax, cmap=cmap, vol_rate=vol_rate)
 
     nothing
 end

@@ -1,17 +1,25 @@
-function grad_1d(x, y)
+using MultivariateStats
+
+function ∇(x::Array{T,1}, y::Array{T,1}) where T
     spl = Spline1D(x, y, k=3) # spline order 3
     derivative(spl, x)
 end
 
-function pca(f, gradient=true, standardize=true)
+function ∇(y::Array{T,1}) where T
+    x = 1:length(y)
+    spl = Spline1D(x, y, k=3)
+    derivative(spl, x)
+end
+
+function pca(f; grad=true, standardize=true)
     X = f
 
     n_unit = size(f, 1)
     t_max = size(f, 2)
 
-    if gradient
+    if grad
         for i = n_unit
-            X[i, :] = grad_1d(1:t_max, X[i, :])
+            X[i, :] = ∇(X[i, :])
         end
     end
 
@@ -35,6 +43,8 @@ function plot_pca_var(M, n=10)
     ylim(0,1.0)
     xlabel("PC #")
     ylabel("Var exp %")
+
+    nothing
 end
 
 function plot_statespace_component(Y, n=10; idx_stim=nothing, α_highlight=0.1)
@@ -43,11 +53,21 @@ function plot_statespace_component(Y, n=10; idx_stim=nothing, α_highlight=0.1)
     for i = 1:n
         subplot(Int(n/2), 2, i)
         plot(Y[i, :])
-        title("Component $i"))
+        title("Component $i")
 
         if !isnothing(idx_stim)
             highlight_stim(idx_stim, α_highlight)
         end
     end
     tight_layout()
+
+    nothing
+end
+
+function plot_statespace_3d(Y, prjax=[1,2,3])
+
+    ax = gcf().add_subplot(111, projection="3d")
+    ax.plot(Y[prjax[1],:], Y[prjax[2],:], Y[prjax[3],:])
+
+    nothing
 end
