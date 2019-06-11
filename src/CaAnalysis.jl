@@ -2,6 +2,7 @@ module CaAnalysis
 
 using Statistics, PyPlot, HDF5, Dierckx
 
+include("init.jl")
 include("data.jl")
 include("denoise.jl")
 include("bleach.jl")
