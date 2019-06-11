@@ -2,6 +2,19 @@ using LsqFit
 
 @. bleach_model(x, p) = p[1] * exp(-x * p[2]) + p[3] * exp(-x * p[4])
 
+"""
+    fit_bleach(f, p0, plot_fit=true)
+
+Fits double exponential bleaching model:
+bleach_model(x, p) = p[1] * exp(-x * p[2]) + p[3] * exp(-x * p[4])
+
+Arguments
+---------
+* `f`: data to fit the bleaching model
+* `p0`: initial parameters (4 element array)
+* `plot_fit`: plot fit result if true
+"""
+
 function fit_bleach(f, p0, plot_fit=true)
     @assert(length(p0) == 4)
 
@@ -27,10 +40,40 @@ function fit_bleach(f, p0, plot_fit=true)
     fitted, bleach_curve ./ bleach_curve[1]
 end
 
+"""
+    fit_bleach(f::Array{T,2}, p0, plot_fit=true)
+
+Calculates mean activity across the units and fits the double exponential
+bleaching model:
+bleach_model(x, p) = p[1] * exp(-x * p[2]) + p[3] * exp(-x * p[4])
+
+Arguments
+---------
+* `f`: N x T data array. N: number of units, T: number of time points.
+* `p0`: initial parameters (4 element array)
+* `plot_fit`: plot fit result if true
+"""
 function fit_bleach(f::Array{T,2}, p0, plot_fit=true) where T
     y = dropdims(mean(f, dims=1), dims=1)
     fit_bleach(y, p0, plot_fit)
 end
+
+"""
+    fit_bleach(data_dict::Dict, p0, plot_fit=true; idx_unit=:ok,
+        data_key="f_denoised")
+
+Calculates mean activity across the units and fits the double exponential
+bleaching model:
+bleach_model(x, p) = p[1] * exp(-x * p[2]) + p[3] * exp(-x * p[4])
+
+Arguments
+---------
+* `f`: N x T data array. N: number of units, T: number of time points.
+* `p0`: initial parameters (4 element array)
+* `plot_fit`: plot fit result if true
+* `idx_unit`: `:ok`: only using pre-filtered units or array/range of indicies.
+* `data_key`: key of data_dict to be used for fitting the model
+"""
 
 function fit_bleach(data_dict::Dict, p0, plot_fit=true; idx_unit=:ok,
         data_key="f_denoised")
