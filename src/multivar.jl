@@ -1,33 +1,7 @@
 using MultivariateStats
 
-function ∇(x::Array{T,1}, y::Array{T,1}) where T
-    spl = Spline1D(x, y, k=3) # spline order 3
-    derivative(spl, x)
-end
-
-function ∇(y::Array{T,1}) where T
-    x = 1:length(y)
-    spl = Spline1D(x, y, k=3)
-    derivative(spl, x)
-end
-
-function pca(f; grad=true, standardize=true)
+function pca(f)
     X = f
-
-    n_unit = size(f, 1)
-    t_max = size(f, 2)
-
-    if grad
-        for i = n_unit
-            X[i, :] = ∇(X[i, :])
-        end
-    end
-
-    if standardize
-        σ = std(f, dims=2)
-        μ = mean(f, dims=2)
-        X = (f .- μ) ./ σ
-    end
 
     M = fit(PCA, X)
     Yt = transform(M, X)
@@ -67,7 +41,14 @@ end
 function plot_statespace_3d(Y, prjax=[1,2,3])
 
     ax = gcf().add_subplot(111, projection="3d")
-    ax.plot(Y[prjax[1],:], Y[prjax[2],:], Y[prjax[3],:])
+    ax.plot(Y[prjax[1],:], Y[prjax[2],:], Y[prjax[3],:], color="k", alpha=0.5)
+
+    ax.view_init(45,15)
+    xlabel("Axis 1")
+    ylabel("Axis 2")
+    zlabel("Axis 3")
+
+    tight_layout()
 
     nothing
 end

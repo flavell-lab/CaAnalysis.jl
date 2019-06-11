@@ -6,9 +6,10 @@ include("data.jl")
 include("denoise.jl")
 include("bleach.jl")
 include("heatmap.jl")
-include("util.jl")
 include("single_unit.jl")
 include("multivar.jl")
+include("util/util.jl")
+include("util/processing.jl")
 
 export import_data,
 
@@ -38,6 +39,12 @@ export import_data,
     pca,
     plot_statespace_component,
     plot_statespace_3d,
-    plot_pca_var
+    plot_pca_var,
+
+    # util/processing.jl
+    grad,
+    standardize,
+    discrete_diff,
+    chain_process
 
 end # module
