@@ -1,6 +1,6 @@
 module CaAnalysis
 
-using Statistics, PyPlot, HDF5
+using Statistics, PyPlot, HDF5, Dierckx
 
 include("data.jl")
 include("denoise.jl")
@@ -8,6 +8,7 @@ include("bleach.jl")
 include("heatmap.jl")
 include("util.jl")
 include("single_unit.jl")
+include("multivar.jl")
 
 export import_data,
 
@@ -31,6 +32,10 @@ export import_data,
 
     # single_unit.jl
     compute_unit_cor,
-    plot_unit_cor
+    plot_unit_cor,
 
+    # multivar.jl
+    pca,
+    plot_statespace_component
+    
 end # module

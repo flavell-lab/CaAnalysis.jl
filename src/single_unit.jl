@@ -30,7 +30,7 @@ end
 function plot_unit_cor(data_dict, n=10; idx_unit=:ok,
         data_key="f_bleach", α_highlight=0.1)
     f = data_dict[data_key][get_unit_idx(data_dict, idx_unit), :]
-    println(size(f))
+
     plot_unit_cor(f, data_dict["stim"], data_dict["idx_stim"], n,
         α_highlight=α_highlight)
 
