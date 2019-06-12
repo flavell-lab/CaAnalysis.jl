@@ -39,6 +39,9 @@ function plot_statespace_component(Y, n=10; idx_stim=nothing, α_highlight=0.1)
 end
 
 function plot_statespace_3d(Y, prjax=[1,2,3])
+    if length(prjax) != 3 || !(eltype(prjax) <: Signed)
+        error("prjax should be list of 3 integers")
+    end
 
     ax = gcf().add_subplot(111, projection="3d")
     ax.plot(Y[prjax[1],:], Y[prjax[2],:], Y[prjax[3],:], color="k", alpha=0.5)
@@ -48,7 +51,18 @@ function plot_statespace_3d(Y, prjax=[1,2,3])
     ylabel("Axis 2")
     zlabel("Axis 3")
 
-    tight_layout()
+    nothing
+end
+
+function plot_statespace_2d(Y, prjax=[1,2])
+    if length(prjax) != 2 || !(eltype(prjax) <: Signed)
+        error("prjax should be list of 2 integers")
+    end
+
+    plot(Y[prjax[1],:], Y[prjax[2],:], color="k", alpha=0.5)
+
+    xlabel("Axis 1")
+    ylabel("Axis 2")
 
     nothing
 end

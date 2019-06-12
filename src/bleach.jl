@@ -69,7 +69,7 @@ Arguments
 * `idx_t`: see [`get_idx_t()`](@ref)
 * `data_key`: key of data_dict to be used for fitting the model
 """
-function fit_bleach(data_dict::Dict, p0, plot_fit=true; data_key="f_denoised", idx_unit=:ok, idx_t=:all)
+function fit_bleach!(data_dict::Dict, p0, plot_fit=true; data_key="f_denoised", idx_unit=:ok, idx_t=:all)
     f = get_data(data_dict::Dict; data_key="f_denoised", idx_unit=idx_unit,
         idx_t=idx_t)
 

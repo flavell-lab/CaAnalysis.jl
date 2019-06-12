@@ -31,7 +31,9 @@ function plot_unit_cor(data_dict, n=10; idx_unit=:ok, idx_t=:all,
         data_key="f_bleach", α_highlight=0.1)
     f = get_data(data_dict, data_key=data_key, idx_unit=idx_unit,
             idx_t=idx_t)
-    plot_unit_cor(f, data_dict["stim"], data_dict["idx_stim"], n,
+    stim = get_stim(data_dict, idx_t=idx_t)
+    idx_stim = get_idx_stim(data_dict, idx_t=idx_t)
+    plot_unit_cor(f, stim, idx_stim, n,
         α_highlight=α_highlight)
 
     nothing

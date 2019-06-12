@@ -8,10 +8,19 @@ function highlight_stim(idx_stim, α_highlight=0.1)
     nothing
 end
 
-function highlight_stim(x, y, z, stim, cmap)
+function highlight_stim(Y, prjax, stim; cmap=PyPlot.cm.hot, skip_0=true, s=20)
+    if !(length(prjax) in [2,3])
+        error("length(prjax) should be 2 or 3")
+    end
+
+    idx_plot = skip_0 ? findall(stim .!= 0) : 1:length(stim)
+
     stim = Float64.(stim)
+    stim_rescaled = stim[idx_plot] ./ maximum(stim[idx_plot])
+
     ax = gca()
-    ax.scatter(x, y, z, c=cmap(stim / maximum(stim)), edgecolor="none")
+    ax.scatter([Y[prjax[i], idx_plot] for i=1:length(prjax)]...,
+        c=cmap(stim_rescaled), edgecolor="none", s=s)
 
     nothing
 end

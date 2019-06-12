@@ -76,3 +76,37 @@ function get_data(data_dict::Dict; data_key="f_denoised", idx_unit=:ok,
 
     data_dict[data_key][unit_use, t_use]
 end
+
+function get_stim(data_dict::Dict; idx_t=:all)
+    t_use = get_idx_t(data_dict, idx_t)
+
+    data_dict["stim"][t_use]
+end
+
+function find_idx_stim(stim)
+    idx_start_list = []
+    idx_end_list = []
+
+    for i_ = 2:length(stim)
+        if stim[i_] != 0.0 && stim[i_-1] == 0.0
+            push!(idx_start_list, i_)
+        elseif stim[i_] == 0.0 && stim[i_-1] != 0.0
+            push!(idx_end_list, i_)
+        end
+    end
+
+    hcat(idx_start_list, idx_end_list)
+end
+
+function get_idx_stim(data_dict::Dict; idx_t=:all)
+    idx_stim = data_dict["idx_stim"]
+    stim_on = zero(data_dict["stim"])
+
+    for i = 1:size(idx_stim, 1)
+        stim_on[idx_stim[i,1]:idx_stim[i,2]] .= 1
+    end
+
+    stim_new = stim_on[get_idx_t(data_dict, idx_t)]
+
+    find_idx_stim(stim_new)
+end

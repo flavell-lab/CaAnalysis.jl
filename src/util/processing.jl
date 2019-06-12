@@ -9,6 +9,25 @@ function ∇(y::Array{T,1}, nu=1) where T
     derivative(spl, x, nu=nu)
 end
 
+function integrate(y::Array{T,1}) where T
+    x = 1:length(y)
+    spl = Spline1D(x, y, k=3) # spline order 3
+    y_int = zero(y)
+    for i = 1:length(y)
+        y_int[i] = integrate(spl, 1, x[i])
+    end
+    y_int
+end
+
+function integrate(Y::Array{T,2}) where T
+    Y_int = zero(Y)
+    for i = 1:size(Y, 1)
+        Y_int[i,:] = integrate(Y[i,:])
+    end
+    
+    Y_int
+end
+
 function standardize(f::Array{T,2}) where T
     σ = std(f, dims=2)
     μ = mean(f, dims=2)

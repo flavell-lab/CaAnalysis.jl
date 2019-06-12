@@ -19,14 +19,14 @@ function plot_cluster_cost(f::Array{T,2}, n=20) where T
     ylabel("Total cost")
     xlabel("Number of clusters")
     xlim(0,n+2)
-    xticks(1:2:n+1)
+    xticks(2:2:n+1)
 
     subplot(2,1,2)
     plot(3:n+1, diff(cost_list), "ko-")
     ylabel("Δ(Total cost)")
     xlabel("Number of clusters")
     xlim(0,n+2)
-    xticks(1:2:n+1)
+    xticks(2:2:n+1)
 
     tight_layout()
 
@@ -52,7 +52,6 @@ function plot_heatmap(f::Array{T,2}, n=10; vmin=0.5, vmax=1.5,
         tol=1.0e-8)
     kmeans_order = sortperm(clustered.assignments);
 
-
     imshow(f_plot[kmeans_order,:], aspect=7, vmin=vmin, vmax=vmax,
         cmap=cmap)
     xlabel("Time (min)")
@@ -69,6 +68,13 @@ end
 
 function plot_heatmap(data_dict, n=10; cmap="magma", data_key="f_bleach",
     idx_unit=:ok, idx_t=:all, vmin=0.5, vmax=1.5, vol_rate=0.75)
+    # if plot_stim && !haskey(data_dict, "stim")
+    #     error("plot_stim is true, but key \"stim\" is not in data_dict")
+    # end
+    # if plot_stim && length(data_dict["stim"]) != size(data_dict["f"], 2)
+    #     error("length(data_dict[\"stim\"]) != # of time points")
+    # end
+    # stim = plot_stim ? get_stim(data_dict, idx_t=idx_t) : nothing
     f = get_data(data_dict, data_key=data_key, idx_unit=idx_unit,
         idx_t=idx_t)
 
