@@ -11,6 +11,7 @@ include("single_unit.jl")
 include("multivar.jl")
 include("util/util.jl")
 include("util/processing.jl")
+include("util/plot.jl")
 
 export import_data,
 
@@ -30,7 +31,6 @@ export import_data,
     get_idx_unit,
     get_idx_t,
     get_data,
-    highlight_stim,
 
     # single_unit.jl
     compute_unit_cor,
@@ -46,6 +46,9 @@ export import_data,
     grad,
     standardize,
     discrete_diff,
-    chain_process
+    chain_process,
+
+    # util/plot.jl
+    highlight_stim
 
 end # module

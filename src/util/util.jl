@@ -1,10 +1,3 @@
-function highlight_stim(stim, α_highlight=0.1)
-    for i = 1:size(stim, 1)
-        gca().axvspan(stim[i,1], stim[i,2],
-            alpha=α_highlight, facecolor="red", lw=0)
-    end
-end
-
 """
     get_idx_unit(data_dict::Dict, idx_unit)
 
