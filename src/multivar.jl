@@ -1,5 +1,3 @@
-using MultivariateStats
-
 function pca(f)
     X = f
 
@@ -66,3 +64,7 @@ function plot_statespace_2d(Y, prjax=[1,2])
 
     nothing
 end
+
+# function calc_statespace_dist(Y, prjax=[1,2,3], dist=Euclidean())
+#     colwise(dist, Y[prjax,1:end-1], Y[prjax,2:end])
+# end

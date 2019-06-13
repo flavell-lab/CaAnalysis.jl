@@ -56,7 +56,8 @@ function fit_bleach(f::Array{T,2}, p0, plot_fit=true) where T
 end
 
 """
-    fit_bleach(data_dict::Dict, p0, plot_fit=true; data_key="f_denoised", idx_unit=:ok, idx_t=:all)
+    fit_bleach(data_dict::Dict, p0, plot_fit=true; data_key="f_denoised",
+        idx_unit=:ok, idx_t=:all)
 
 Calculates mean activity across the units and fits the double exponential.
 

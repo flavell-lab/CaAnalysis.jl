@@ -1,6 +1,6 @@
 module CaAnalysis
 
-using Statistics, PyPlot, HDF5, Dierckx, ProgressMeter, Distances
+using Statistics, PyPlot, HDF5, Dierckx, ProgressMeter, MultivariateStats
 
 include("init.jl")
 include("data.jl")
@@ -16,10 +16,12 @@ include("util/plot.jl")
 export import_data,
 
     # denoise.jl
-    denoise_gstv,
-    denoise_gstv!,
-    denoise_tf,
-    denoise_tf!,
+    preview_denoise,
+    denoise,
+    denoise!,
+    DenoiserTrendfilter,
+    DenoiserGSTV,
+
 
     # bleach.jl
     fit_bleach,
@@ -49,7 +51,7 @@ export import_data,
     plot_statespace_2d,
 
     # util/processing.jl
-    grad,
+    derivative,
     integrate,
     standardize,
     discrete_diff,
