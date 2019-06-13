@@ -4,7 +4,6 @@ using Statistics, PyPlot, HDF5, Dierckx, ProgressMeter, MultivariateStats
 
 include("init.jl")
 include("data.jl")
-include("denoise.jl")
 include("bleach.jl")
 include("heatmap.jl")
 include("single_unit.jl")
@@ -12,17 +11,9 @@ include("multivar.jl")
 include("util/util.jl")
 include("util/processing.jl")
 include("util/plot.jl")
+include("util/denoise.jl")
 
 export import_data,
-
-    # denoise.jl
-    preview_denoise,
-    denoise,
-    denoise!,
-    DenoiserTrendfilter,
-    DenoiserGSTV,
-
-
     # bleach.jl
     fit_bleach,
     fit_bleach!,
@@ -59,5 +50,13 @@ export import_data,
 
     # util/plot.jl
     highlight_stim
+
+
+    # util/denoise.jl
+    preview_denoise,
+    denoise,
+    denoise!,
+    DenoiserTrendfilter,
+    DenoiserGSTV,
 
 end # module

@@ -41,7 +41,7 @@ end
 """
     denoise!(data_dict::Dict, denoiser)
 
-Applies denoiser to rows of `data_dict["f"]`` and saves to
+Applies denoiser to rows of `data_dict["f"]` and saves to
 `data_dict["f_denoised"]`
 
 Arguments
