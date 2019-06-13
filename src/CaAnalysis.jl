@@ -40,6 +40,7 @@ export import_data,
     plot_statespace_component,
     plot_statespace_3d,
     plot_statespace_2d,
+    plot_statespace_2d_stim,
 
     # util/processing.jl
     derivative,
@@ -49,7 +50,7 @@ export import_data,
     chain_process,
 
     # util/plot.jl
-    highlight_stim
+    highlight_stim,
 
 
     # util/denoise.jl

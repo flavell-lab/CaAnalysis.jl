@@ -65,6 +65,52 @@ function plot_statespace_2d(Y, prjax=[1,2])
     nothing
 end
 
-# function calc_statespace_dist(Y, prjax=[1,2,3], dist=Euclidean())
-#     colwise(dist, Y[prjax,1:end-1], Y[prjax,2:end])
-# end
+function plot_statespace_2d_stim(Y, idx_comp, stim, idx_stim; margin=25,
+        align_translate=false, cmap=PyPlot.cm.hot)
+    idx_c1, idx_c2 = idx_comp
+    max_len = maximum(diff(idx_stim, dims=2) .+ 1)
+    n_stim = size(idx_stim, 1)
+
+    stim_events = zeros(n_stim, 2, max_len)
+
+    for i = 1:n_stim
+        idx_start, idx_end = idx_stim[i,:]
+        stim_length = idx_end - idx_start + 1
+        println((idx_start, idx_end))
+        c1_0 = align_translate ? Y[idx_c1, idx_start] : 0
+        c2_0 = align_translate ? Y[idx_c2, idx_start] : 0
+
+        stim_events[i, 1, 1:stim_length] = Y[idx_c1, idx_start:idx_end] .- c1_0
+        stim_events[i, 2, 1:stim_length] = Y[idx_c2, idx_start:idx_end] .- c2_0
+    end
+
+    c1_min, c1_max = extrema(stim_events[:,1,:])
+    c2_min, c2_max = extrema(stim_events[:,2,:])
+    c1_min -= 0.2 * abs(c1_min)
+    c2_min -= 0.2 * abs(c2_min)
+    c1_max += 0.2 * abs(c1_max)
+    c2_max += 0.2 * abs(c2_max)
+
+
+    for i = 1:n_stim
+        subplot(1, n_stim, i)
+        idx_start, idx_end = idx_stim[i,:]
+        stim_length = idx_end - idx_start + 1
+
+        c1 = stim_events[i, 1, 1:stim_length]
+        c2 = stim_events[i, 2, 1:stim_length]
+
+        # scatter(c1, c2, c="k", alpha=0.5, edgecolor="none")
+        highlight_stim(hcat(c1,c2)', [1,2], stim[idx_start:idx_end],
+            cmap=cmap)
+        xlim(c1_min, c1_max)
+        ylim(c2_min, c2_max)
+        title("Stim #$(i)")
+        if i == 1
+            xlabel("Component $(idx_c1)")
+            ylabel("Component $(idx_c2)")
+        end
+    end
+
+    tight_layout()
+end

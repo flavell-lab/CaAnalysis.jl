@@ -1,4 +1,4 @@
-function highlight_stim(idx_stim, α_highlight=0.1)
+function highlight_stim(idx_stim::Array{Int64, 2}, α_highlight=0.1)
     ax = gca()
     for i = 1:size(idx_stim, 1)
         ax.axvspan(idx_stim[i,1], idx_stim[i,2],
