@@ -57,6 +57,6 @@ export import_data,
     denoise,
     denoise!,
     DenoiserTrendfilter,
-    DenoiserGSTV,
+    DenoiserGSTV
 
 end # module
