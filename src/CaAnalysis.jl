@@ -2,6 +2,8 @@ module CaAnalysis
 
 using Statistics, PyPlot, HDF5, Dierckx, ProgressMeter, MultivariateStats
 
+import Images:centered, imfilter
+
 include("init.jl")
 include("data.jl")
 include("bleach.jl")
@@ -12,6 +14,7 @@ include("util/util.jl")
 include("util/processing.jl")
 include("util/plot.jl")
 include("util/denoise.jl")
+include("util/baseline.jl")
 
 export import_data,
     # bleach.jl
@@ -58,6 +61,9 @@ export import_data,
     denoise,
     denoise!,
     DenoiserTrendfilter,
-    DenoiserGSTV
+    DenoiserGSTV,
+
+    # util/baseline.jl
+    estimate_baseline
 
 end # module
