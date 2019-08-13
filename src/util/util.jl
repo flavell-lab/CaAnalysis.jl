@@ -14,10 +14,10 @@ Arguments
 """
 function get_idx_unit(data_dict::Dict, idx_unit)
     if idx_unit == :ok
-        if !haskey(data_dict, "idx_good")
-            error("Missing key \"idx_good\" in data_dict")
+        if !haskey(data_dict, "idx_ok")
+            error("Missing key \"idx_ok\" in data_dict")
         end
-        return data_dict["idx_good"]
+        return data_dict["idx_ok"]
     elseif idx_unit == :all
         return 1:size(data_dict["f"], 1)
     elseif isa(idx_unit, Union{UnitRange{T}, Array{T,1}} where T <: Signed)
