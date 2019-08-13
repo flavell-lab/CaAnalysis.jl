@@ -77,10 +77,10 @@ function get_data(data_dict::Dict; data_key="f_denoised", idx_unit=:ok,
     data_dict[data_key][unit_use, t_use]
 end
 
-function get_stim(data_dict::Dict; idx_t=:all)
+function get_stim(data_dict::Dict; idx_t=:all, stim_key="opto_activation")
     t_use = get_idx_t(data_dict, idx_t)
 
-    data_dict["stim"][t_use]
+    data_dict[stim_key][t_use]
 end
 
 function find_idx_stim(stim)
@@ -98,9 +98,10 @@ function find_idx_stim(stim)
     hcat(idx_start_list, idx_end_list)
 end
 
-function get_idx_stim(data_dict::Dict; idx_t=:all)
-    idx_stim = data_dict["idx_stim"]
-    stim_on = zero(data_dict["stim"])
+function get_idx_stim(data_dict::Dict; idx_t=:all,
+    idx_stim_key="idx_stim", stim_key="opto_activation")
+    idx_stim = data_dict[idx_stim_key]
+    stim_on = zero(data_dict[stim_key])
 
     for i = 1:size(idx_stim, 1)
         stim_on[idx_stim[i,1]:idx_stim[i,2]] .= 1
