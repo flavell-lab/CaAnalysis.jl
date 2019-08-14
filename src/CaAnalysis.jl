@@ -6,11 +6,11 @@ import Images:centered, imfilter
 
 include("init.jl")
 include("data.jl")
-include("bleach.jl")
 include("heatmap.jl")
 include("single_unit.jl")
 include("multivar.jl")
 include("util/util.jl")
+include("util/bleach.jl")
 include("util/processing.jl")
 include("util/plot.jl")
 include("util/denoise.jl")
