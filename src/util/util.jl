@@ -99,7 +99,7 @@ function find_idx_stim(stim)
 end
 
 function get_idx_stim(data_dict::Dict; idx_t=:all,
-    idx_stim_key="idx_stim", stim_key="opto_activation")
+    idx_stim_key="idx_opto", stim_key="opto_activation")
     idx_stim = data_dict[idx_stim_key]
     stim_on = zero(data_dict[stim_key])
 
