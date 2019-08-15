@@ -20,7 +20,7 @@ function highlight_stim(Y, prjax, stim; cmap=PyPlot.cm.hot, skip_0=true, s=20)
 
     ax = gca()
     ax.scatter([Y[prjax[i], idx_plot] for i=1:length(prjax)]...,
-        c=cmap(stim_rescaled), edgecolor="none", s=s)
+        c=cmap(stim_rescaled), edgecolor=nothing, s=s)
 
     nothing
 end
