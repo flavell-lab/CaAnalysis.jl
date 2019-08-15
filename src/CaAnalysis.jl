@@ -39,6 +39,7 @@ export import_data,
 
     # multivar.jl
     pca,
+    multivar_fit,
     plot_pca_var,
     plot_statespace_component,
     plot_statespace_3d,
