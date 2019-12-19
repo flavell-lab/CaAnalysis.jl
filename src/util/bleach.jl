@@ -79,7 +79,7 @@ function fit_bleach!(data_dict::Dict, p0, plot_fit=true; data_key="f_denoised", 
     data_dict["bleach_param"] = fitted.param
     data_dict["bleach_resid"] = fitted.resid
     data_dict["bleach_curve"] = bleach_curve
-    data_dict["f_bleach"] = Array((data_dict["f_denoised"]' ./ bleach_curve)')
+    data_dict["f_bleach"] = Array((data_dict["f_denoised"] ./ bleach_curve'))
 
     nothing
 end

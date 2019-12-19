@@ -1,8 +1,10 @@
-function pca(f)
-    X = f
+function pca(X; args...)
+    multivar_fit(X, PCA; args...)
+end
 
-    M = fit(PCA, X)
-    Yt = transform(M, X)
+function multivar_fit(X, f; args...)
+    M = fit(f, X; args...)
+    Yt = transform(M, X) # transform observations into latent variable
     (M, X, Yt)
 end
 

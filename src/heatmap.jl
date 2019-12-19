@@ -44,7 +44,7 @@ function plot_cluster_cost(data_dict::Dict, n=20; data_key="f_bleach",
 end
 
 function plot_heatmap(f::Array{T,2}, n=10; vmin=0.5, vmax=1.5,
-        cmap="magma", vol_rate=0.75) where T
+        cmap="magma", vol_rate=0.75, aspect="auto") where T
 
     f_plot = f ./ mean(f, dims=2)
 
@@ -52,11 +52,10 @@ function plot_heatmap(f::Array{T,2}, n=10; vmin=0.5, vmax=1.5,
         tol=1.0e-8)
     kmeans_order = sortperm(clustered.assignments);
 
-    imshow(f_plot[kmeans_order,:], aspect=7, vmin=vmin, vmax=vmax,
+    imshow(f_plot[kmeans_order,:], aspect=aspect, vmin=vmin, vmax=vmax,
         cmap=cmap)
     xlabel("Time (min)")
     ylabel("Unit")
-
     Δ_minute = 5 # minute
     n_vol = size(f, 2)
     t_rg = 0:floor(Int, n_vol * vol_rate / 60 / Δ_minute)
@@ -67,18 +66,34 @@ function plot_heatmap(f::Array{T,2}, n=10; vmin=0.5, vmax=1.5,
 end
 
 function plot_heatmap(data_dict, n=10; cmap="magma", data_key="f_bleach",
-    idx_unit=:ok, idx_t=:all, vmin=0.5, vmax=1.5, vol_rate=0.75)
-    # if plot_stim && !haskey(data_dict, "stim")
-    #     error("plot_stim is true, but key \"stim\" is not in data_dict")
-    # end
-    # if plot_stim && length(data_dict["stim"]) != size(data_dict["f"], 2)
-    #     error("length(data_dict[\"stim\"]) != # of time points")
-    # end
-    # stim = plot_stim ? get_stim(data_dict, idx_t=idx_t) : nothing
+    idx_unit=:ok, idx_t=:all, vmin=0.5, vmax=1.5, vol_rate=0.75,
+    plot_stim=false, stim_key="opto_activation")
+
     f = get_data(data_dict, data_key=data_key, idx_unit=idx_unit,
         idx_t=idx_t)
 
-    plot_heatmap(f, n; vmin=vmin, vmax=vmax, cmap=cmap, vol_rate=vol_rate)
+    if plot_stim
+        if !haskey(data_dict, stim_key)
+            error("plot_stim is true, but key \"$(stim_key)\"" *
+                "is not in data_dict")
+        end
+        if length(data_dict[stim_key]) != size(data_dict["f"], 2)
+            error("length(data_dict[\"$(stim_key)\"]) != # of time points in f")
+        end
+
+        stim = get_stim(data_dict, idx_t=idx_t, stim_key=stim_key)
+
+        ax1 = subplot2grid((6,1), (0,0), rowspan=4)
+        plot_heatmap(f, n; vmin=vmin, vmax=vmax, cmap=cmap, vol_rate=vol_rate)
+
+        ax2 = subplot2grid((6,1), (4,0), sharex=ax1, rowspan=2)
+        plot(stim, "r")
+        xlabel("Time (min)")
+        ylabel("Stim")
+        xlim(0, (length(stim)-1))
+    else
+        plot_heatmap(f, n; vmin=vmin, vmax=vmax, cmap=cmap, vol_rate=vol_rate)
+    end
 
     nothing
 end

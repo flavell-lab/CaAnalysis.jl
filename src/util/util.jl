@@ -14,10 +14,10 @@ Arguments
 """
 function get_idx_unit(data_dict::Dict, idx_unit)
     if idx_unit == :ok
-        if !haskey(data_dict, "idx_good")
-            error("Missing key \"idx_good\" in data_dict")
+        if !haskey(data_dict, "idx_ok")
+            error("Missing key \"idx_ok\" in data_dict")
         end
-        return data_dict["idx_good"]
+        return data_dict["idx_ok"]
     elseif idx_unit == :all
         return 1:size(data_dict["f"], 1)
     elseif isa(idx_unit, Union{UnitRange{T}, Array{T,1}} where T <: Signed)
@@ -77,10 +77,10 @@ function get_data(data_dict::Dict; data_key="f_denoised", idx_unit=:ok,
     data_dict[data_key][unit_use, t_use]
 end
 
-function get_stim(data_dict::Dict; idx_t=:all)
+function get_stim(data_dict::Dict; idx_t=:all, stim_key="opto_activation")
     t_use = get_idx_t(data_dict, idx_t)
 
-    data_dict["stim"][t_use]
+    data_dict[stim_key][t_use]
 end
 
 function find_idx_stim(stim)
@@ -98,9 +98,10 @@ function find_idx_stim(stim)
     hcat(idx_start_list, idx_end_list)
 end
 
-function get_idx_stim(data_dict::Dict; idx_t=:all)
-    idx_stim = data_dict["idx_stim"]
-    stim_on = zero(data_dict["stim"])
+function get_idx_stim(data_dict::Dict; idx_t=:all,
+    idx_stim_key="idx_opto", stim_key="opto_activation")
+    idx_stim = data_dict[idx_stim_key]
+    stim_on = zero(data_dict[stim_key])
 
     for i = 1:size(idx_stim, 1)
         stim_on[idx_stim[i,1]:idx_stim[i,2]] .= 1
