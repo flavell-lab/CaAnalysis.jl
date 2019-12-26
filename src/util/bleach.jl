@@ -54,7 +54,7 @@ function fit_bleach(f, plot_fit=true)
 end
 
 """
-    fit_bleach(f::Array{<:Real,2}, p0, plot_fit=true)
+    fit_bleach(f::Array{<:Real,2}, plot_fit=true)
 
 Calculates mean activity across the units and fits the double exponential
 bleaching model.
