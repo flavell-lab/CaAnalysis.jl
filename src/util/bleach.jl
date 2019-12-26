@@ -1,45 +1,60 @@
-using LsqFit
+using Optim
 
-@. bleach_model(x, p) = p[1] * exp(-x * p[2]) + p[3] * exp(-x * p[4])
+@. exp_mono(t, p) = exp(-t * p[1])
+@. exp_bi(t, p) = p[1] * exp(-t * p[2]) + (1 - p[1]) * exp(-t * p[3])
+
+gen_cost_mono(t, f) = p -> sum((exp_mono(t, p) .- f) .^ 2)
+gen_cost_bi(t, f) = p -> sum((exp_bi(t, p) .- f) .^ 2)
 
 """
-    fit_bleach(f, p0, plot_fit=true)
+    fit_bleach(f, plot_fit=true)
 
 Fits double exponential bleaching model.
 
 Arguments
 ---------
-* `f`: data to fit the bleaching model
-* `p0`: initial parameters (4 element array)
+* `f`: 1D data to fit the bleaching model
 * `plot_fit`: plot fit result if true
 """
-function fit_bleach(f, p0, plot_fit=true)
-    @assert(length(p0) == 4)
+function fit_bleach(f, plot_fit=true)
+    y = f ./ maximum(f)
+    t = 0:(length(y)-1)
 
-    y = f ./ f[1]
-    x = 0:length(y)-1
+    optim_opts = Optim.Options(g_tol=1e-15, iterations=1000)
 
-    fitted = curve_fit(bleach_model, x, y, p0)
+    f_cost_mono = gen_cost_mono(t, y)
+    p0_mono = [0.01]
+    mono_fitted = optimize(f_cost_mono, p0_mono, Newton(), optim_opts,
+        autodiff=:forward)
+    p_fit_mono = mono_fitted.minimizer
+
+    f_cost_bi = gen_cost_bi(t, y)
+    p0_bi = [0.75, p_fit_mono[1], 0.01]
+    bi_fitted = optimize(f_cost_bi, p0_bi, Newton(), optim_opts,
+        autodiff=:forward)
+    p_fit_bi = bi_fitted.minimizer
+    y_hat_bi = exp_bi(t, p_fit_bi)
+    resid_bi = y_hat_bi .- y # residual
 
     if plot_fit
         subplot(2,1,1)
         title("Fitted")
-        plot(y, "k", alpha=0.75)
-        plot(x, bleach_model(x, fitted.param), "r")
+        plot(t, y, "k", alpha=0.75)
+        plot(t, y_hat_bi, "r")
 
         subplot(2,1,2)
         title("Residual")
-        plot(fitted.resid, "k", alpha=0.75)
+        plot(resid_bi, "k", alpha=0.75)
 
         tight_layout()
-        println("Fitted parameter:", fitted.param)
+        println("Fitted parameter:", p_fit_bi)
     end
-    bleach_curve = bleach_model(x, fitted.param)
-    fitted, bleach_curve ./ bleach_curve[1]
+
+    resid_bi, p_fit_bi, y_hat_bi
 end
 
 """
-    fit_bleach(f::Array{T,2}, p0, plot_fit=true)
+    fit_bleach(f::Array{<:Real,2}, p0, plot_fit=true)
 
 Calculates mean activity across the units and fits the double exponential
 bleaching model.
@@ -47,16 +62,16 @@ bleaching model.
 Arguments
 ---------
 * `f`: N x T data array. N: number of units, T: number of time points.
-* `p0`: initial parameters (4 element array)
 * `plot_fit`: plot fit result if true
 """
-function fit_bleach(f::Array{T,2}, p0, plot_fit=true) where T
+function fit_bleach(f::Array{<:Real,2}, plot_fit=true)
     y = dropdims(mean(f, dims=1), dims=1)
-    fit_bleach(y, p0, plot_fit)
+
+    fit_bleach(y, plot_fit)
 end
 
 """
-    fit_bleach(data_dict::Dict, p0, plot_fit=true; data_key="f_denoised",
+    fit_bleach(data_dict::Dict, plot_fit=true; data_key="f_denoised",
         idx_unit=:ok, idx_t=:all)
 
 Calculates mean activity across the units and fits the double exponential.
@@ -64,22 +79,22 @@ Calculates mean activity across the units and fits the double exponential.
 Arguments
 ---------
 * `data_dict`: data_dictionary.
-* `p0`: initial parameters (4 element array)
 * `plot_fit`: plot fit result if true
 * `idx_unit`: see [`get_idx_unit()`](@ref)
 * `idx_t`: see [`get_idx_t()`](@ref)
 * `data_key`: key of data_dict to be used for fitting the model
 """
-function fit_bleach!(data_dict::Dict, p0, plot_fit=true; data_key="f_denoised", idx_unit=:ok, idx_t=:all)
+function fit_bleach!(data_dict::Dict, plot_fit=true; data_key="f_denoised",
+    idx_unit=:ok, idx_t=:all)
     f = get_data(data_dict::Dict; data_key="f_denoised", idx_unit=idx_unit,
         idx_t=idx_t)
 
-    fitted, bleach_curve = fit_bleach(f, p0, plot_fit)
+    resid_bi, p_fit_bi, y_hat_bi = fit_bleach(f, plot_fit)
 
-    data_dict["bleach_param"] = fitted.param
-    data_dict["bleach_resid"] = fitted.resid
-    data_dict["bleach_curve"] = bleach_curve
-    data_dict["f_bleach"] = Array((data_dict["f_denoised"] ./ bleach_curve'))
+    data_dict["bleach_param"] = p_fit_bi
+    data_dict["bleach_resid"] = resid_bi
+    data_dict["bleach_curve"] = y_hat_bi
+    data_dict["f_bleach"] = Array((data_dict["f_denoised"] ./ y_hat_bi'))
 
     nothing
 end
