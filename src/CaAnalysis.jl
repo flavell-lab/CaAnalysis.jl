@@ -24,6 +24,8 @@ export import_data,
     # heatmap.jl
     plot_cluster_cost,
     plot_heatmap,
+    order_by_kmeans,
+    order_by_cor
 
     # unit.jl
     plot_unit_cor,
