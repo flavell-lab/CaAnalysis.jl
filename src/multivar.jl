@@ -116,3 +116,23 @@ function plot_statespace_2d_stim(Y, idx_comp, stim, idx_stim; margin=25,
 
     tight_layout()
 end
+
+function plot_loading(M, i=1; agrs...)
+    w_ = projection(M)[:,i]
+    w_order = sortperm(w_)
+    x = 1:length(w_)
+
+    bar(x, w_[w_order], color="gray"; agrs...)
+end
+
+function highlight_loading(M, i=1; idx_roi, idx_use, color="red", args...)
+    w_ = projection(M)[:,i]
+    x = 1:length(w_)
+    w_order = sortperm(w_)
+    w_order_rev_hash = Dict(w_order .=> x)
+
+    idx_mark = intersect(idx_use, idx_roi)
+
+    x_mark = [w_order_rev_hash[i] for i = idx_mark]
+    bar(x_mark, w_[idx_mark], color=color; args...)
+end
