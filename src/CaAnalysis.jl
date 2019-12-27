@@ -47,6 +47,8 @@ export import_data,
     plot_statespace_3d,
     plot_statespace_2d,
     plot_statespace_2d_stim,
+    plot_loading,
+    highlight_loading,
 
     # util/processing.jl
     derivative,
