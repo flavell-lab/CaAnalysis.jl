@@ -101,7 +101,7 @@ Applies multiple data processing steps to the traces.
 - `normalize::Bool`: Whether to normalize the traces.
 """
 function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::Real; activity_bkg=nothing, marker_bkg=nothing,
-        min_intensity::Real=0, denoise::Bool=false, bleach_corr::Bool=false, normalize::Bool=false, divide::Bool=false)
+        min_intensity::Real=0, denoise::Bool=false, bleach_corr::Bool=false, divide::Bool=false, normalize::Bool=false)
 
     activity_traces = copy(activity_traces)
     marker_traces = copy(marker_traces)
@@ -114,7 +114,8 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
         marker_traces = bkg_subtract(marker_traces, marker_bkg)
     end
     # delete neurons with too low S/N
-    neuron_rois = [roi for roi in keys(activity_traces) if mean(values(activity_traces[roi])) > min_intensity]
+    neuron_rois = [roi for roi in keys(activity_traces) if
+            length(values(activity_traces[roi])) > 0 && mean(values(activity_traces[roi])) > min_intensity]
     for roi in keys(activity_traces)
         if !(roi in neuron_rois)
             delete!(activity_traces, roi)
