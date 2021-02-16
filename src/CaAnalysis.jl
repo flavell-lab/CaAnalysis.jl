@@ -78,6 +78,7 @@ export import_data,
     get_background,
     bkg_subtract,
     normalize_traces,
-    process_traces
+    process_traces,
+    get_all_values
 
 end # module

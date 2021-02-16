@@ -176,3 +176,15 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
 
     return all_traces
 end
+
+
+"""
+Gets all values from a set of processed traces. Ensure that the traces have been normalized prior to using this function!
+"""
+function get_all_values(processed_traces)
+    trace_vals = []
+    for neuron in keys(processed_traces)
+        append!(trace_vals, collect(values(processed_traces[neuron])))
+    end
+    return trace_vals
+end
