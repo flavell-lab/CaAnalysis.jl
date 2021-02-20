@@ -1,6 +1,7 @@
 module CaAnalysis
 
-using Statistics, PyPlot, HDF5, Dierckx, ProgressMeter, MultivariateStats
+using Statistics, PyPlot, HDF5, Dierckx, ProgressMeter, MultivariateStats,
+    MHDIO, ImageDataIO, ExtractRegisteredData
 
 import Images:centered, imfilter
 
@@ -9,6 +10,7 @@ include("data.jl")
 include("heatmap.jl")
 include("single_unit.jl")
 include("multivar.jl")
+include("noise_correction.jl")
 include("util/util.jl")
 include("util/bleach.jl")
 include("util/processing.jl")
@@ -69,6 +71,14 @@ export import_data,
     DenoiserGSTV,
 
     # util/baseline.jl
-    estimate_baseline
+    estimate_baseline,
+    
+    # noise_correction.jl
+    divide_by_marker_signal,
+    get_background,
+    bkg_subtract,
+    normalize_traces,
+    process_traces,
+    get_all_values
 
 end # module
