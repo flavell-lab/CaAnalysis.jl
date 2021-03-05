@@ -99,9 +99,10 @@ Applies multiple data processing steps to the traces.
 - `bleach_corr::Bool`: Whether to bleach-correct the traces.
 - `divide::Bool`: Whether to divide the activity channel traces by the marker channel traces.
 - `normalize::Bool`: Whether to normalize the traces.
+- `normalize_fn::Function`: Function to use when normalizing traces.
 """
 function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::Real; activity_bkg=nothing, marker_bkg=nothing,
-        min_intensity::Real=0, denoise::Bool=false, bleach_corr::Bool=false, divide::Bool=false, normalize::Bool=false)
+        min_intensity::Real=0, denoise::Bool=false, bleach_corr::Bool=false, divide::Bool=false, normalize::Bool=false, normalize_fn::Function=mean)
 
     activity_traces = copy(activity_traces)
     marker_traces = copy(marker_traces)
@@ -170,7 +171,7 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
 
     if normalize
         for idx=1:2
-            all_traces[idx] = normalize_traces(all_traces[idx])
+            all_traces[idx] = normalize_traces(all_traces[idx], fn=normalize_fn)
         end
     end
 
