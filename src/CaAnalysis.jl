@@ -1,7 +1,7 @@
 module CaAnalysis
 
 using Statistics, PyPlot, HDF5, Dierckx, ProgressMeter, MultivariateStats,
-    MHDIO, ImageDataIO, ExtractRegisteredData
+    MHDIO, ImageDataIO, ExtractRegisteredData, Interpolations
 
 import Images:centered, imfilter
 

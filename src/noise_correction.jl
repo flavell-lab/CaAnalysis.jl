@@ -83,6 +83,26 @@ function normalize_traces(traces::Dict; zero::Bool=true, fn::Function=mean)
 end
 
 """
+Interpolates data at missing time points.
+
+# Arguments
+ - `traces::Dict`: Dictionary containing for each neuron a set of time points and activity values at those time points
+ - `t_range`: Time points to interpolate to
+ - `itp_method` (optional, default `Linear()`): Interpolation method.
+ - `extrap_method` (optional, default `Flat()`): Extrapolation method (for interpolating data points outside all time points the neuron was detected in)
+"""
+function interpolate_traces(traces::Dict, t_range; itp_method=Linear(), extrap_method=Flat())
+    new_traces = Dict()
+    for neuron in keys(traces)
+        t_vals = sort(collect(keys(traces[neuron])))
+        activity_vals = [traces[neuron][t] for t in t_vals]
+        itp = extrapolate(interpolate((t_vals,), activity_vals, Gridded(itp_method)), extrap_method)
+        new_traces[neuron] = [Float64(itp(t), RoundNearest) for t in t_range]
+    end
+    return new_traces
+end
+
+"""
 Applies multiple data processing steps to the traces.
 
 # Arguments
@@ -100,9 +120,12 @@ Applies multiple data processing steps to the traces.
 - `divide::Bool`: Whether to divide the activity channel traces by the marker channel traces.
 - `normalize::Bool`: Whether to normalize the traces.
 - `normalize_fn::Function`: Function to use when normalizing traces.
+- `interpolate::Bool`: Whether to interpolate the traces at missing time points.
+- `t_range`: Time points to interpolate to.
 """
 function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::Real; activity_bkg=nothing, marker_bkg=nothing,
-        min_intensity::Real=0, denoise::Bool=false, bleach_corr::Bool=false, divide::Bool=false, normalize::Bool=false, normalize_fn::Function=mean)
+        min_intensity::Real=0, denoise::Bool=false, bleach_corr::Bool=false, divide::Bool=false, normalize::Bool=false, normalize_fn::Function=mean,
+        interpolate::Bool=false, t_range=nothing)
 
     activity_traces = copy(activity_traces)
     marker_traces = copy(marker_traces)
@@ -172,6 +195,12 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
     if normalize
         for idx=1:2
             all_traces[idx] = normalize_traces(all_traces[idx], fn=normalize_fn)
+        end
+    end
+
+    if interpolate
+        for idx=1:2
+            all_traces[idx] = interpolate_traces(all_traces[idx], t_range)
         end
     end
 
