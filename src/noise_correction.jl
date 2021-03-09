@@ -113,7 +113,7 @@ function zscore_traces(traces::Dict)
         s = std(collect(values(traces[neuron])))
         new_traces[neuron] = Dict()
         for t in keys(traces[neuron])
-            new_traces[neuron][t] = (traces[neuron] - m) / s
+            new_traces[neuron][t] = (traces[neuron][t] - m) / s
         end
     end
     return new_traces
