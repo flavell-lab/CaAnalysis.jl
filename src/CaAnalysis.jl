@@ -78,6 +78,8 @@ export import_data,
     get_background,
     bkg_subtract,
     normalize_traces,
+    interpolate_traces,
+    zscore_traces,
     process_traces,
     get_all_values
 

@@ -102,6 +102,23 @@ function interpolate_traces(traces::Dict, t_range; itp_method=Linear(), extrap_m
     return new_traces
 end
 
+
+"""
+Z-scores traces.
+"""
+function zscore_traces(traces::Dict)
+    new_traces = Dict()
+    for neuron in keys(traces)
+        m = mean(collect(values(traces[neuron])))
+        s = std(collect(values(traces[neuron])))
+        new_traces[neuron] = Dict()
+        for t in keys(traces[neuron])
+            new_traces[neuron][t] = (traces[neuron] - m) / s
+        end
+    end
+    return new_traces
+end
+
 """
 Applies multiple data processing steps to the traces.
 
@@ -119,13 +136,14 @@ Applies multiple data processing steps to the traces.
 - `bleach_corr::Bool`: Whether to bleach-correct the traces.
 - `divide::Bool`: Whether to divide the activity channel traces by the marker channel traces.
 - `normalize::Bool`: Whether to normalize the traces.
-- `normalize_fn::Function`: Function to use when normalizing traces.
+- `normalize_fn::Function`: Function to use to get "average" activity when normalizing traces.
+- `zscore::Bool`: Whether to z-score the traces.
 - `interpolate::Bool`: Whether to interpolate the traces at missing time points.
 - `t_range`: Time points to interpolate to.
 """
 function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::Real; activity_bkg=nothing, marker_bkg=nothing,
         min_intensity::Real=0, denoise::Bool=false, bleach_corr::Bool=false, divide::Bool=false, normalize::Bool=false, normalize_fn::Function=mean,
-        interpolate::Bool=false, t_range=nothing)
+        zscore::Bool=false, interpolate::Bool=false, t_range=nothing)
 
     activity_traces = copy(activity_traces)
     marker_traces = copy(marker_traces)
@@ -195,6 +213,12 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
     if normalize
         for idx=1:2
             all_traces[idx] = normalize_traces(all_traces[idx], fn=normalize_fn)
+        end
+    end
+
+    if zscore
+        for idx=1:2
+            all_traces[idx] = zscore_traces(all_traces[idx])
         end
     end
 
