@@ -168,15 +168,16 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
             delete!(marker_traces, roi)
         end
     end
-    # make traces array for futher processing
-    all_traces = [activity_traces, marker_traces]
+
 
     # interpolate traces
     if interpolate
-        for idx=1:2
-            all_traces[idx] = interpolate_traces(all_traces[idx], t_range)
-        end
+        activity_traces = interpolate_traces(activity_traces, t_range)
+        marker_traces = interpolate_traces(maker_traces, t_range)
     end
+
+    # make traces array for futher processing
+    all_traces = [activity_traces, marker_traces]
 
     for (idx, traces) in enumerate(all_traces)
         traces_arr, hmap, valid_rois = make_traces_array(traces, threshold=threshold, replace_blank=true)
@@ -205,7 +206,7 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
         all_traces[idx] = Dict()
         for i in 1:length(valid_rois)
             all_traces[idx][valid_rois[i]] = Dict()
-            for t in keys(all_traces[1][valid_rois[i]])
+            for t in keys(activity_traces[valid_rois[i]])
                 all_traces[idx][valid_rois[i]][t] = processed_traces_arr[i,t]
             end
         end
