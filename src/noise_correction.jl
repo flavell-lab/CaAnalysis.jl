@@ -169,6 +169,12 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
         end
     end
 
+    # interpolate traces
+    if interpolate
+        for idx=1:2
+            all_traces[idx] = interpolate_traces(all_traces[idx], t_range)
+        end
+    end
 
     # make traces array for futher processing
     all_traces = [activity_traces, marker_traces]
@@ -222,11 +228,6 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
         end
     end
 
-    if interpolate
-        for idx=1:2
-            all_traces[idx] = interpolate_traces(all_traces[idx], t_range)
-        end
-    end
 
     return all_traces
 end
