@@ -159,12 +159,12 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
     neuron_rois = [roi for roi in keys(activity_traces) if
             length(values(activity_traces[roi])) > 0 && mean(values(activity_traces[roi])) > min_intensity]
     for roi in keys(activity_traces)
-        if !(roi in neuron_rois)
+        if !(roi in neuron_rois) || length(activity_traces[roi]) < threshold
             delete!(activity_traces, roi)
         end
     end
     for roi in keys(marker_traces)
-        if !(roi in neuron_rois)
+        if !(roi in neuron_rois) || length(marker_traces[roi]) < threshold
             delete!(marker_traces, roi)
         end
     end
