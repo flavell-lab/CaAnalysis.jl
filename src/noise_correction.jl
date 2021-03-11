@@ -173,7 +173,7 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
     # make traces array for futher processing
     all_traces = [activity_traces, marker_traces]
     for (idx, traces) in enumerate(all_traces)
-        traces_arr, hmap, valid_rois = make_traces_array(traces, threshold=threshold, normalized=false, replace_blank=true)
+        traces_arr, hmap, valid_rois = make_traces_array(traces, threshold=threshold, replace_blank=true)
 
         processed_traces_arr = traces_arr
         data_dict = Dict()
