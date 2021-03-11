@@ -205,7 +205,7 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
         all_traces[idx] = Dict()
         for i in 1:length(valid_rois)
             all_traces[idx][valid_rois[i]] = Dict()
-            for t in keys(activity_traces[valid_rois[i]])
+            for t in keys(all_traces[1][valid_rois[i]])
                 all_traces[idx][valid_rois[i]][t] = processed_traces_arr[i,t]
             end
         end
