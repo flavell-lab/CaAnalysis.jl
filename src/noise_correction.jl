@@ -183,8 +183,8 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
 
     # interpolate traces
     if interpolate
-        activity_traces = interpolate_traces(activity_traces, t_range)
-        marker_traces = interpolate_traces(marker_traces, t_range)
+        activity_traces = interpolate_traces(activity_traces, interpolate_t_range)
+        marker_traces = interpolate_traces(marker_traces, interpolate_t_range)
     end
 
     # make traces array for futher processing
