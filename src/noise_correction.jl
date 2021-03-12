@@ -120,7 +120,17 @@ function zscore_traces(traces::Dict)
 end
 
 """
-Applies multiple data processing steps to the traces.
+Applies multiple data processing steps to the traces. The order of processing steps is:
+
+- Background-subtraction
+- Delete low S/N neurons
+- Delete neurons detected in too few time points
+- Interpolate traces at missing data points
+- Denoise
+- Bleach-correct
+- Divide activity by marker channel
+- Normalize
+- Zscore
 
 # Arguments
 - `activity_traces::Dict`: traces in the activity channel
@@ -132,18 +142,19 @@ Applies multiple data processing steps to the traces.
 - `marker_bkg`: Background in marker channel. If left blank, background will not be subtracted.
 - `min_intensity::Real`: Minimum average intensity in the activity channel for a neuron (after background subtraction).
     Neurons with less than this much signal will be removed. Default 0. 
+- `interpolate_t_range`: Time points to interpolate to (default `nothing` which skips data interpolation)
 - `denoise::Bool`: Whether to apply a total variation denoising step.
 - `bleach_corr::Bool`: Whether to bleach-correct the traces.
 - `divide::Bool`: Whether to divide the activity channel traces by the marker channel traces.
 - `normalize::Bool`: Whether to normalize the traces.
 - `normalize_fn::Function`: Function to use to get "average" activity when normalizing traces.
 - `zscore::Bool`: Whether to z-score the traces.
-- `interpolate::Bool`: Whether to interpolate the traces at missing time points.
-- `t_range`: Time points to interpolate to.
 """
 function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::Real; activity_bkg=nothing, marker_bkg=nothing,
-        min_intensity::Real=0, denoise::Bool=false, bleach_corr::Bool=false, divide::Bool=false, normalize::Bool=false, normalize_fn::Function=mean,
-        zscore::Bool=false, interpolate::Bool=false, t_range=nothing)
+        min_intensity::Real=0, interpolate_t_range=nothing, denoise::Bool=false, bleach_corr::Bool=false, divide::Bool=false, normalize::Bool=false, normalize_fn::Function=mean,
+        zscore::Bool=false)
+
+    interpolate = !isnothing(interpolate_t_range)
 
     activity_traces = copy(activity_traces)
     marker_traces = copy(marker_traces)
