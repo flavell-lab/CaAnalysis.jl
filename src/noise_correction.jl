@@ -144,7 +144,7 @@ Applies multiple data processing steps to the traces. The order of processing st
 - `marker_bkg`: Background in marker channel. If left blank, background will not be subtracted.
 - `min_intensity::Real`: Minimum average intensity in the activity channel for a neuron (after background subtraction).
     Neurons with less than this much signal will be removed. Default 0. 
-- `interpolate_t_range`: Time points to interpolate to (default `nothing` which skips data interpolation)
+- `interpolate_t_range`: Time points to interpolate to (default `nothing` which skips data interpolation). If set, all other time points will be deleted.
 - `denoise::Bool`: Whether to apply a total variation denoising step.
 - `bleach_corr::Bool`: Whether to bleach-correct the traces.
 - `divide::Bool`: Whether to divide the activity channel traces by the marker channel traces.
@@ -154,7 +154,7 @@ Applies multiple data processing steps to the traces. The order of processing st
 """
 function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::Real; activity_bkg=nothing, marker_bkg=nothing,
         min_intensity::Real=0, interpolate_t_range=nothing, denoise::Bool=false, bleach_corr::Bool=false, divide::Bool=false, normalize::Bool=false, normalize_fn::Function=mean,
-        zscore::Bool=false)
+        zscore::Bool=false, fill_val=NaN)
 
     interpolate = !isnothing(interpolate_t_range)
 
@@ -213,10 +213,11 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
         if bleach_corr
             if interpolate
                 fit_bleach!(data_dict, idx_t=interpolate_t_range)
+                processed_traces_arr[:,interpolate_t_range] .= data_dict["f_bleach"]
             else
                 fit_bleach!(data_dict)
+                processed_traces_arr = data_dict["f_bleach"]
             end
-            processed_traces_arr = data_dict["f_bleach"]
         end
 
         # convert back to dictionary
@@ -224,7 +225,9 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
         for i in 1:length(valid_rois)
             all_traces[idx][valid_rois[i]] = Dict()
             for t in keys(activity_traces[valid_rois[i]])
-                all_traces[idx][valid_rois[i]][t] = processed_traces_arr[i,t]
+                if !interpolate || t in interpolate_t_range
+                    all_traces[idx][valid_rois[i]][t] = processed_traces_arr[i,t]
+                end
             end
         end
     end
