@@ -16,9 +16,12 @@ Arguments
 * `f`: 1D data to fit the bleaching model
 * `plot_fit`: plot fit result if true
 """
-function fit_bleach(f, plot_fit=true)
+function fit_bleach(f, plot_fit=true; idx_t=:all)
     y = f ./ maximum(f)
-    t = 0:(length(y)-1)
+
+    d = Dict()
+    d["f"] = y
+    t = get_idx_t(d, idx_t)
 
     optim_opts = Optim.Options(g_tol=1e-15, iterations=1000)
 
@@ -64,10 +67,10 @@ Arguments
 * `f`: N x T data array. N: number of units, T: number of time points.
 * `plot_fit`: plot fit result if true
 """
-function fit_bleach(f::Array{<:Real,2}, plot_fit=true)
+function fit_bleach(f::Array{<:Real,2}, plot_fit=true; idx_t=:all)
     y = dropdims(mean(f, dims=1), dims=1)
 
-    fit_bleach(y, plot_fit)
+    fit_bleach(y, plot_fit, idx_t=idx_t)
 end
 
 """
@@ -86,15 +89,15 @@ Arguments
 """
 function fit_bleach!(data_dict::Dict, plot_fit=true; data_key="f_denoised",
     idx_unit=:ok, idx_t=:all)
-    f = get_data(data_dict::Dict; data_key="f_denoised", idx_unit=idx_unit,
+    f = get_data(data_dict::Dict; data_key=data_key, idx_unit=idx_unit,
         idx_t=idx_t)
 
-    resid_bi, p_fit_bi, y_hat_bi = fit_bleach(f, plot_fit)
+    resid_bi, p_fit_bi, y_hat_bi = fit_bleach(f, plot_fit, idx_t=idx_t)
 
     data_dict["bleach_param"] = p_fit_bi
     data_dict["bleach_resid"] = resid_bi
     data_dict["bleach_curve"] = y_hat_bi
-    data_dict["f_bleach"] = Array((data_dict["f_denoised"] ./ y_hat_bi'))
+    data_dict["f_bleach"] = Array((f ./ y_hat_bi'))
 
     nothing
 end
