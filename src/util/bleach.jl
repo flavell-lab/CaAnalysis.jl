@@ -16,12 +16,8 @@ Arguments
 * `f`: 1D data to fit the bleaching model
 * `plot_fit`: plot fit result if true
 """
-function fit_bleach(f, plot_fit=true; idx_t=:all)
+function fit_bleach(f, t, plot_fit=true)
     y = f ./ maximum(f)
-
-    d = Dict()
-    d["f"] = y
-    t = get_idx_t(d, idx_t)
 
     optim_opts = Optim.Options(g_tol=1e-15, iterations=1000)
 
@@ -70,7 +66,11 @@ Arguments
 function fit_bleach(f::Array{<:Real,2}, plot_fit=true; idx_t=:all)
     y = dropdims(mean(f, dims=1), dims=1)
 
-    fit_bleach(y, plot_fit, idx_t=idx_t)
+    d = Dict()
+    d["f"] = f
+    t = get_idx_t(d, idx_t)
+
+    fit_bleach(y, t, plot_fit)
 end
 
 """
