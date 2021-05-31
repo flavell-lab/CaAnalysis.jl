@@ -87,17 +87,19 @@ Interpolates data at missing time points.
 
 # Arguments
  - `traces::Dict`: Dictionary containing for each neuron a set of time points and activity values at those time points
- - `t_range`: Time points to interpolate to
+ - `t_range`: Time points to interpolate to. Time points outside this range will be set to `fill_val`
  - `itp_method` (optional, default `Linear()`): Interpolation method.
  - `extrap_method` (optional, default `Interpolations.Flat()`): Extrapolation method (for interpolating data points outside all time points the neuron was detected in)
+ - `fill_val` (optional, default `NaN`): Value to fill time points outside the interpolation range.
 """
-function interpolate_traces(traces::Dict, t_range; itp_method=Linear(), extrap_method=Interpolations.Flat())
+function interpolate_traces(traces::Dict, t_range; itp_method=Linear(), extrap_method=Interpolations.Flat(), fill_val=NaN)
     new_traces = Dict()
+    max_t = maximum(t_range)
     for neuron in keys(traces)
         t_vals = sort(collect(keys(traces[neuron])))
         activity_vals = [traces[neuron][t] for t in t_vals]
         itp = extrapolate(interpolate((t_vals,), activity_vals, Gridded(itp_method)), extrap_method)
-        new_traces[neuron] = [Float64(itp(t), RoundNearest) for t in t_range]
+        new_traces[neuron] = [(t in t_range) ? Float64(itp(t), RoundNearest) : fill_val for t in 1:max_t]
     end
     return new_traces
 end
