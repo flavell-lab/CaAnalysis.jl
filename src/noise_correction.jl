@@ -138,13 +138,14 @@ Applies multiple data processing steps to the traces. The order of processing st
 - `activity_traces::Dict`: traces in the activity channel
 - `marker_traces::Dict`: traces in the marker channel
 - `threshold::Real`: Number of timepoint detections necessary to include a neuron in the analysis
+- `t_range`: Time points to extract traces over.
 
 # Keyword arguments
 - `activity_bkg`: Background in activity channel. If left blank, background will not be subtracted.
 - `marker_bkg`: Background in marker channel. If left blank, background will not be subtracted.
 - `min_intensity::Real`: Minimum average intensity in the activity channel for a neuron (after background subtraction).
     Neurons with less than this much signal will be removed. Default 0. 
-- `interpolate_t_range`: Time points to interpolate to (default `nothing` which skips data interpolation). If set, all other time points will be deleted.
+- `interpolate::Bool`: Whether to interpolate missing data points within the time range.
 - `denoise::Bool`: Whether to apply a total variation denoising step.
 - `bleach_corr::Bool`: Whether to bleach-correct the traces.
 - `divide::Bool`: Whether to divide the activity channel traces by the marker channel traces.
@@ -152,11 +153,9 @@ Applies multiple data processing steps to the traces. The order of processing st
 - `normalize_fn::Function`: Function to use to get "average" activity when normalizing traces.
 - `zscore::Bool`: Whether to z-score the traces.
 """
-function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::Real; activity_bkg=nothing, marker_bkg=nothing,
-        min_intensity::Real=0, interpolate_t_range=nothing, denoise::Bool=false, bleach_corr::Bool=false, divide::Bool=false, normalize::Bool=false, normalize_fn::Function=mean,
+function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::Real, t_range; activity_bkg=nothing, marker_bkg=nothing,
+        min_intensity::Real=0, interpolate::Bool=false, denoise::Bool=false, bleach_corr::Bool=false, divide::Bool=false, normalize::Bool=false, normalize_fn::Function=mean,
         zscore::Bool=false, fill_val=NaN)
-
-    interpolate = !isnothing(interpolate_t_range)
 
     activity_traces = copy(activity_traces)
     marker_traces = copy(marker_traces)
@@ -168,16 +167,18 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
     if !isnothing(marker_bkg)
         marker_traces = bkg_subtract(marker_traces, marker_bkg)
     end
+
     # delete neurons with too low S/N
     neuron_rois = [roi for roi in keys(activity_traces) if
-            length(values(activity_traces[roi])) > 0 && mean(values(activity_traces[roi])) > min_intensity]
+            length(values(activity_traces[roi])) > 0 && mean([activity_traces[roi][t] for t in keys(activity_traces[roi]) if t in t_range]) > min_intensity]
+
     for roi in keys(activity_traces)
-        if !(roi in neuron_rois) || length(activity_traces[roi]) < threshold
+        if !(roi in neuron_rois) || length([t for t in keys(activity_traces[roi]) if t in t_range]) < threshold
             delete!(activity_traces, roi)
         end
     end
     for roi in keys(marker_traces)
-        if !(roi in neuron_rois) || length(marker_traces[roi]) < threshold
+        if !(roi in neuron_rois) || length([t for t in keys(marker_traces[roi]) if t in t_range]) < threshold
             delete!(marker_traces, roi)
         end
     end
@@ -185,8 +186,8 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
 
     # interpolate traces
     if interpolate
-        activity_traces = interpolate_traces(activity_traces, interpolate_t_range)
-        marker_traces = interpolate_traces(marker_traces, interpolate_t_range)
+        activity_traces = interpolate_traces(activity_traces, t_range)
+        marker_traces = interpolate_traces(marker_traces, t_range)
     end
 
     # make traces array for futher processing
@@ -211,13 +212,8 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
 
         # bleach-correct
         if bleach_corr
-            if interpolate
-                fit_bleach!(data_dict, idx_t=interpolate_t_range)
-                processed_traces_arr[:,interpolate_t_range] .= data_dict["f_bleach"]
-            else
-                fit_bleach!(data_dict)
-                processed_traces_arr = data_dict["f_bleach"]
-            end
+            fit_bleach!(data_dict, idx_t=t_range)
+            processed_traces_arr[:,t_range] .= data_dict["f_bleach"]
         end
 
         # convert back to dictionary
@@ -225,7 +221,7 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
         for i in 1:length(valid_rois)
             all_traces[idx][valid_rois[i]] = Dict()
             for t in keys(activity_traces[valid_rois[i]])
-                if !interpolate || t in interpolate_t_range
+                if t in t_range
                     all_traces[idx][valid_rois[i]][t] = processed_traces_arr[i,t]
                 end
             end
