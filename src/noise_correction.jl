@@ -170,7 +170,8 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
 
     # delete neurons with too low S/N
     neuron_rois = [roi for roi in keys(activity_traces) if
-            length(values(activity_traces[roi])) > 0 && mean([activity_traces[roi][t] for t in keys(activity_traces[roi]) if t in t_range]) > min_intensity]
+        length([activity_traces[roi][t] for t in keys(activity_traces[roi]) if t in t_range]) > 0 &&
+            mean([activity_traces[roi][t] for t in keys(activity_traces[roi]) if t in t_range]) > min_intensity]
 
     for roi in keys(activity_traces)
         if !(roi in neuron_rois) || length([t for t in keys(activity_traces[roi]) if t in t_range]) < threshold
