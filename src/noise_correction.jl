@@ -104,6 +104,16 @@ function interpolate_traces(traces::Dict, t_range; itp_method=Linear(), extrap_m
     return new_traces
 end
 
+"""
+Deconvolves traces to correct for GCaMP decay with respect to confocal volume time, `k`
+"""
+function deconvolve_traces(traces_array::Dict, k::Real)
+    g(t,k) = 2^(-t*k)*(1-2^(-k))
+    deconvolved_traces_array = zeros(size(traces_array))
+    for n=1:size(traces_array,1)
+        deconvolved_traces_array[n,:] = real.(ifft(fft(traces_array[n,:])./fft([g(t-1,k) for t=1:param["max_t"]])))
+    end
+end
 
 """
 Z-scores traces.
@@ -132,6 +142,7 @@ Applies multiple data processing steps to the traces. The order of processing st
 - Bleach-correct
 - Divide activity by marker channel
 - Normalize
+- Deconvolve
 - Zscore
 
 # Arguments
@@ -151,11 +162,12 @@ Applies multiple data processing steps to the traces. The order of processing st
 - `divide::Bool`: Whether to divide the activity channel traces by the marker channel traces.
 - `normalize::Bool`: Whether to normalize the traces.
 - `normalize_fn::Function`: Function to use to get "average" activity when normalizing traces.
+- `k::Union{Real,Nothing}`: Deconvolution parameter. Set this to (time length of confocal volume) / (GCaMP decay half-life)
 - `zscore::Bool`: Whether to z-score the traces.
 """
 function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::Real, t_range; activity_bkg=nothing, marker_bkg=nothing,
         min_intensity::Real=0, interpolate::Bool=false, denoise::Bool=false, bleach_corr::Bool=false, divide::Bool=false, normalize::Bool=false, normalize_fn::Function=mean,
-        zscore::Bool=false, fill_val=NaN)
+        k::Union{Real,Nothing}=nothing, zscore::Bool=false, fill_val=NaN)
 
     activity_traces = copy(activity_traces)
     marker_traces = copy(marker_traces)
@@ -239,6 +251,11 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
             all_traces[idx] = normalize_traces(all_traces[idx], fn=normalize_fn)
         end
     end
+
+    if !isnothing(k)
+        all_traces[1] = deconvolve_traces(all_traces[1], k)
+    end
+
 
     if zscore
         for idx=1:2
