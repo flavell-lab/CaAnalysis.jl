@@ -107,12 +107,13 @@ end
 """
 Deconvolves traces to correct for GCaMP decay with respect to confocal volume time, `k`
 """
-function deconvolve_traces(traces_array::Dict, k::Real)
+function deconvolve_traces(traces::Dict, k::Real, max_t::Integer)
     g(t,k) = 2^(-t*k)*(1-2^(-k))
-    deconvolved_traces_array = zeros(size(traces_array))
-    for n=1:size(traces_array,1)
-        deconvolved_traces_array[n,:] = real.(ifft(fft(traces_array[n,:])./fft([g(t-1,k) for t=1:param["max_t"]])))
+    deconvolved_traces = Dict()
+    for n=keys(traces)
+        deconvolved_traces[n] = real.(ifft(fft([traces[n][t] for t=1:max_t])./fft([g(t-1,k) for t=1:max_t])))
     end
+    return deconvolved_traces
 end
 
 """
@@ -241,10 +242,17 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
         end
     end
 
+
     # divide activity by marker
     if divide
         all_traces[1] = divide_by_marker_signal(all_traces[1], all_traces[2])
     end
+
+    # interpolate again in case of issues
+    if interpolate
+        all_traces[1] = interpolate_traces(all_traces[1], t_range)
+    end
+
 
     if normalize
         for idx=1:2
@@ -252,8 +260,11 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
         end
     end
 
+
     if !isnothing(k)
-        all_traces[1] = deconvolve_traces(all_traces[1], k)
+        @assert(interpolate, "Cannot deconvolve non-interpolated traces")
+        @assert(collect(t_range) == collect(1:param["max_t"]), "Cannot deconvolve incomplete traces")
+        all_traces[1] = deconvolve_traces(all_traces[1], k, param["max_t"])
     end
 
 
