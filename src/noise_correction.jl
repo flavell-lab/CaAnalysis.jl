@@ -263,8 +263,8 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
 
     if !isnothing(k)
         @assert(interpolate, "Cannot deconvolve non-interpolated traces")
-        @assert(collect(t_range) == collect(1:param["max_t"]), "Cannot deconvolve incomplete traces")
-        all_traces[1] = deconvolve_traces(all_traces[1], k, param["max_t"])
+        @assert(collect(t_range) == collect(1:maximum(t_range)), "Cannot deconvolve incomplete traces")
+        all_traces[1] = deconvolve_traces(all_traces[1], k, maximum(t_range))
     end
 
 
