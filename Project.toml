@@ -1,13 +1,14 @@
 name = "CaAnalysis"
 uuid = "947cb7f0-8959-11e9-3494-21039d60b1bb"
-authors = ["Jungsoo Kim <jungsoo@mit.edu>"]
-version = "0.3.0"
+authors = ["Jungsoo Kim <jungsoo@mit.edu>", "Adam Atanas <aaatanas@mit.edu>"]
+version = "0.4.0"
 
 [deps]
 Clustering = "aaaa29a8-35af-508c-8bc3-b662a17a0fe5"
 Dierckx = "39dd38d3-220a-591b-8e3c-4c3a8c710a94"
 Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
 ExtractRegisteredData = "666c3283-de97-4a1c-ae8f-c95ebd78c995"
+FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
 FFTRegGPU = "86d2b4ce-0b7d-4e3e-98ec-23077478530b"
 FlavellBase = "88015601-1e04-46e4-b006-ffd03bd63f42"
 GPUFilter = "971465da-66d1-11e9-3450-a9d80ad1cd1a"
