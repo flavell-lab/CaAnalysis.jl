@@ -16,18 +16,18 @@ end
 
 
 """
-Gets the background camera intensity from the MHD files to be subtracted.
+Gets the background camera intensity from the NRRD files to be subtracted.
 
 # Arguments
 - `timepts`: Time points to get background of
-- `get_basename::Function`: Function that outputs the name of the MHD file from the time and channel
-- `mhd_path::String`: Path to MHD files
+- `get_basename::Function`: Function that outputs the name of the NRRD file from the time and channel
+- `nrrd_path::String`: Path to NRRD files
 - `ch::Int`: Channel
 """
-function get_background(timepts, get_basename::Function, mhd_path::String, ch::Int)
+function get_background(timepts, get_basename::Function, nrrd_path::String, ch::Int)
     frame_bkg = Dict()
     @showprogress for t in timepts
-        frame_bkg[t] = median(read_img(MHD(joinpath(mhd_path, get_basename(t, ch))*".mhd")))
+        frame_bkg[t] = median(read_img(NRRD(joinpath(nrrd_path, get_basename(t, ch))*".nrrd")))
     end
     return frame_bkg
 end
