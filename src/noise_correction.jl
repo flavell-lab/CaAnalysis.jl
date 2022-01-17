@@ -16,18 +16,18 @@ end
 
 
 """
-Gets the background camera intensity from the MHD files to be subtracted.
+Gets the background camera intensity from the NRRD files to be subtracted.
 
 # Arguments
 - `timepts`: Time points to get background of
-- `get_basename::Function`: Function that outputs the name of the MHD file from the time and channel
-- `mhd_path::String`: Path to MHD files
+- `get_basename::Function`: Function that outputs the name of the NRRD file from the time and channel
+- `nrrd_path::String`: Path to NRRD files
 - `ch::Int`: Channel
 """
-function get_background(timepts, get_basename::Function, mhd_path::String, ch::Int)
+function get_background(timepts, get_basename::Function, nrrd_path::String, ch::Int)
     frame_bkg = Dict()
     @showprogress for t in timepts
-        frame_bkg[t] = median(read_img(MHD(joinpath(mhd_path, get_basename(t, ch))*".mhd")))
+        frame_bkg[t] = median(read_img(NRRD(joinpath(nrrd_path, get_basename(t, ch))*".nrrd")))
     end
     return frame_bkg
 end
@@ -104,6 +104,17 @@ function interpolate_traces(traces::Dict, t_range; itp_method=Linear(), extrap_m
     return new_traces
 end
 
+"""
+Deconvolves traces to correct for GCaMP decay with respect to confocal volume time, `k`
+"""
+function deconvolve_traces(traces::Dict, k::Real, max_t::Integer)
+    g(t,k) = 2^(-t*k)*(1-2^(-k))
+    deconvolved_traces = Dict()
+    for n=keys(traces)
+        deconvolved_traces[n] = real.(ifft(fft([traces[n][t] for t=1:max_t])./fft([g(t-1,k) for t=1:max_t])))
+    end
+    return deconvolved_traces
+end
 
 """
 Z-scores traces.
@@ -132,6 +143,7 @@ Applies multiple data processing steps to the traces. The order of processing st
 - Bleach-correct
 - Divide activity by marker channel
 - Normalize
+- Deconvolve
 - Zscore
 
 # Arguments
@@ -151,11 +163,12 @@ Applies multiple data processing steps to the traces. The order of processing st
 - `divide::Bool`: Whether to divide the activity channel traces by the marker channel traces.
 - `normalize::Bool`: Whether to normalize the traces.
 - `normalize_fn::Function`: Function to use to get "average" activity when normalizing traces.
+- `k::Union{Real,Nothing}`: Deconvolution parameter. Set this to (time length of confocal volume) / (GCaMP decay half-life)
 - `zscore::Bool`: Whether to z-score the traces.
 """
 function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::Real, t_range; activity_bkg=nothing, marker_bkg=nothing,
         min_intensity::Real=0, interpolate::Bool=false, denoise::Bool=false, bleach_corr::Bool=false, divide::Bool=false, normalize::Bool=false, normalize_fn::Function=mean,
-        zscore::Bool=false, fill_val=NaN)
+        k::Union{Real,Nothing}=nothing, zscore::Bool=false, fill_val=NaN)
 
     activity_traces = copy(activity_traces)
     marker_traces = copy(marker_traces)
@@ -229,16 +242,31 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
         end
     end
 
+
     # divide activity by marker
     if divide
         all_traces[1] = divide_by_marker_signal(all_traces[1], all_traces[2])
     end
+
+    # interpolate again in case of issues
+    if interpolate
+        all_traces[1] = interpolate_traces(all_traces[1], t_range)
+    end
+
 
     if normalize
         for idx=1:2
             all_traces[idx] = normalize_traces(all_traces[idx], fn=normalize_fn)
         end
     end
+
+
+    if !isnothing(k)
+        @assert(interpolate, "Cannot deconvolve non-interpolated traces")
+        @assert(collect(t_range) == collect(1:maximum(t_range)), "Cannot deconvolve incomplete traces")
+        all_traces[1] = deconvolve_traces(all_traces[1], k, maximum(t_range))
+    end
+
 
     if zscore
         for idx=1:2
