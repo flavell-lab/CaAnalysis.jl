@@ -84,7 +84,7 @@ function fit_bleach(f::Array{<:Real,2}, plot_fit=true, use_mono=false; idx_t=:al
 end
 
 """
-    fit_bleach(data_dict::Dict, plot_fit=true; data_key="f_denoised",
+    fit_bleach(data_dict::Dict, plot_fit=true, use_mono=false; data_key="f_denoised",
         idx_unit=:ok, idx_t=:all)
 
 Calculates mean activity across the units and fits the double exponential.
@@ -98,8 +98,8 @@ Arguments
 * `data_key`: key of data_dict to be used for fitting the model
 * `use_mono`: use mono exponential model instead of double exponential model if true
 """
-function fit_bleach!(data_dict::Dict, plot_fit=true; data_key="f_denoised",
-    idx_unit=:ok, idx_t=:all, use_mono=false)
+function fit_bleach!(data_dict::Dict, plot_fit=true, use_mono=false; data_key="f_denoised",
+    idx_unit=:ok, idx_t=:all)
     f = get_data(data_dict::Dict; data_key=data_key, idx_unit=idx_unit,
         idx_t=idx_t)
 

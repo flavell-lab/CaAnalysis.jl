@@ -226,7 +226,7 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
 
         # bleach-correct
         if bleach_corr
-            fit_bleach!(data_dict, idx_t=t_range)
+            fit_bleach!(data_dict, true, true, idx_t=t_range)
             processed_traces_arr[:,t_range] .= data_dict["f_bleach"]
         end
 
