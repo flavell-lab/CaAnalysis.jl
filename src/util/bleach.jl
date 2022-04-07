@@ -3,7 +3,7 @@ using Optim
 @. exp_mono(t, p) = exp(-t * p[1])
 @. exp_bi(t, p) = p[1] * exp(-t * p[2]) + (1 - p[1]) * exp(-t * p[3])
 
-gen_cost_mono(t, f) = p -> sum((exp_mono(t, p) .- f) .^ 2)
+gen_cost_mono(t, f) = p -> sum((log.(f) .- log.(exp_mono(t, p))) .^ 2)
 gen_cost_bi(t, f) = p -> sum((exp_bi(t, p) .- f) .^ 2)
 
 """
