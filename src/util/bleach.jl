@@ -1,7 +1,7 @@
 using Optim
 
 const timepts_offset = 50
-@. exp_mono(t, p) = max(0, (1 - p[2]) * exp((timepts_offset-t) * p[1]) + p[2])
+@. exp_mono(t, p) = max(0, (1 - p[2]) * exp((timepts_offset+0.5-t) * p[1]) + p[2])
 @. exp_bi(t, p) = max(0, (1 - p[4]) * p[1] * exp(-t * p[2]) + (1 - p[4]) * (1 - p[1]) * exp(-t * p[3]) + p[4])
 
 gen_cost_mono(t, f) = p -> sum((log.(f) .- log.(exp_mono(t, p))) .^ 2)
