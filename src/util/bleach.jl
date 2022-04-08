@@ -1,7 +1,7 @@
 using Optim
 
-@. exp_mono(t, p) = (1 - p[2]) * exp(-t * p[1]) + p[2]
-@. exp_bi(t, p) = (1 - p[4]) * p[1] * exp(-t * p[2]) + (1 - p[4]) * (1 - p[1]) * exp(-t * p[3]) + p[4]
+@. exp_mono(t, p) = max(0, (1 - p[2]) * exp(-t * p[1]) + p[2])
+@. exp_bi(t, p) = max(0, (1 - p[4]) * p[1] * exp(-t * p[2]) + (1 - p[4]) * (1 - p[1]) * exp(-t * p[3]) + p[4])
 
 gen_cost_mono(t, f) = p -> sum((log.(f) .- log.(exp_mono(t, p))) .^ 2)
 gen_cost_bi(t, f) = p -> sum((exp_bi(t, p) .- f) .^ 2)
@@ -18,7 +18,7 @@ Arguments
 * `plot_fit`: plot fit result if true
 * `use_mono`: use mono exponential model instead of double exponential model if true
 """
-function fit_bleach(f, t, plot_fit=true, use_mono=false, timepts_norm=50,quantile_norm=0.9)
+function fit_bleach(f, t, plot_fit=true, use_mono=false, timepts_norm=50, quantile_norm=0.9)
     y = f ./ quantile(f[1:timepts_norm], quantile_norm)
 
     optim_opts = Optim.Options(g_tol=1e-15, iterations=1000)
