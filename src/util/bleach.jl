@@ -1,7 +1,7 @@
 using Optim
 
-@. exp_mono(t, p) = exp(-t * p[1])
-@. exp_bi(t, p) = p[1] * exp(-t * p[2]) + (1 - p[1]) * exp(-t * p[3])
+@. exp_mono(t, p) = (1 - p[2]) * exp(-t * p[1]) + p[2]
+@. exp_bi(t, p) = (1 - p[4]) * p[1] * exp(-t * p[2]) + (1 - p[4]) * (1 - p[1]) * exp(-t * p[3]) + p[4]
 
 gen_cost_mono(t, f) = p -> sum((log.(f) .- log.(exp_mono(t, p))) .^ 2)
 gen_cost_bi(t, f) = p -> sum((exp_bi(t, p) .- f) .^ 2)
@@ -18,13 +18,13 @@ Arguments
 * `plot_fit`: plot fit result if true
 * `use_mono`: use mono exponential model instead of double exponential model if true
 """
-function fit_bleach(f, t, plot_fit=true, use_mono=false)
-    y = f ./ maximum(f)
+function fit_bleach(f, t, plot_fit=true, use_mono=false, timepts_norm=50, percentile_norm=90)
+    y = f ./ percentile(f[1:timepts_norm], percentile_norm)
 
     optim_opts = Optim.Options(g_tol=1e-15, iterations=1000)
 
     f_cost_mono = gen_cost_mono(t, y)
-    p0_mono = [0.01]
+    p0_mono = [0.01, 0.0]
     mono_fitted = optimize(f_cost_mono, p0_mono, Newton(), optim_opts,
         autodiff=:forward)
     p_fit_mono = mono_fitted.minimizer
@@ -34,7 +34,7 @@ function fit_bleach(f, t, plot_fit=true, use_mono=false)
         resid_mono = y_hat_mono .- y
     else
         f_cost_bi = gen_cost_bi(t, y)
-        p0_bi = [0.75, p_fit_mono[1], 0.01]
+        p0_bi = [0.75, p_fit_mono[1], 0.01, p_fit_mono[2]]
         bi_fitted = optimize(f_cost_bi, p0_bi, Newton(), optim_opts,
             autodiff=:forward)
         p_fit_bi = bi_fitted.minimizer
