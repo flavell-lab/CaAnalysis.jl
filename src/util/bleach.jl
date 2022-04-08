@@ -18,7 +18,7 @@ Arguments
 * `plot_fit`: plot fit result if true
 * `use_mono`: use mono exponential model instead of double exponential model if true
 """
-function fit_bleach(f, t, plot_fit=true, use_mono=false, timepts_norm=50, quantile_norm=0.9)
+function fit_bleach(f, t, plot_fit=true, use_mono=false, timepts_norm=100, quantile_norm=0.5)
     y = f ./ quantile(f[1:timepts_norm], quantile_norm)
 
     optim_opts = Optim.Options(g_tol=1e-15, iterations=1000)
