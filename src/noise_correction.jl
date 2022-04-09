@@ -166,7 +166,7 @@ Applies multiple data processing steps to the traces. The order of processing st
 """
 function process_traces(param::Dict, activity_traces::Dict, marker_traces::Dict, threshold::Real, t_range; activity_bkg=nothing, marker_bkg=nothing,
         min_intensity::Real=0, interpolate::Bool=false, denoise::Bool=false, bleach_corr::Bool=false, divide::Bool=false, normalize_fn::Function=x->quantile(x,0.2),
-        k::Union{Real,Nothing}=nothing)
+        k::Union{Real,Nothing}=nothing, valid_rois=nothing)
 
     activity_traces = copy(activity_traces)
     marker_traces = copy(marker_traces)
@@ -207,7 +207,7 @@ function process_traces(param::Dict, activity_traces::Dict, marker_traces::Dict,
         activity_traces = divide_by_marker_signal(activity_traces, marker_traces)
     end
 
-    traces_arr, hmap, valid_rois = make_traces_array(traces, threshold=threshold, replace_blank=true)
+    traces_arr, hmap, valid_rois = make_traces_array(traces, threshold=threshold, replace_blank=true, valid_rois=valid_rois)
 
     processed_traces_arr = traces_arr
 
@@ -251,9 +251,9 @@ function process_traces(param::Dict, activity_traces::Dict, marker_traces::Dict,
     traces_zscored = zscore_traces(processed_traces_arr)
 
     if bleach_corr
-        return processed_traces_arr, traces_normalized, traces_zscored, data_dict["bleach_param"], data_dict["bleach_curve"], data_dict["bleach_resid"]
+        return processed_traces_arr, traces_normalized, traces_zscored, valid_rois, data_dict["bleach_param"], data_dict["bleach_curve"], data_dict["bleach_resid"]
     else
-        return processed_traces_arr, traces_normalized, traces_zscored
+        return processed_traces_arr, traces_normalized, traces_zscored, valid_rois
     end
 end
 
