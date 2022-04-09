@@ -207,7 +207,7 @@ function process_traces(param::Dict, activity_traces::Dict, marker_traces::Dict,
         activity_traces = divide_by_marker_signal(activity_traces, marker_traces)
     end
 
-    traces_arr, hmap, valid_rois = make_traces_array(traces, threshold=threshold, replace_blank=true, valid_rois=valid_rois)
+    traces_arr, hmap, valid_rois = make_traces_array(activity_traces, threshold=threshold, replace_blank=true, valid_rois=valid_rois)
 
     processed_traces_arr = traces_arr
 
