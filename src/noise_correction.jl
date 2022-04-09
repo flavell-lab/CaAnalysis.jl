@@ -112,8 +112,8 @@ Z-scores traces.
 function zscore_traces(traces)
     new_traces = zeros(size(traces))
     for neuron in keys(traces)
-        m = mean(collect(values(traces[neuron])))
-        s = std(collect(values(traces[neuron])))
+        m = mean(traces[neuron,:])
+        s = std(traces[neuron,:])
         new_traces[neuron, :] .= (traces[neuron,:] .- m) ./ s
     end
     return new_traces
