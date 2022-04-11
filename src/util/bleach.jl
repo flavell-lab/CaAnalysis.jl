@@ -1,10 +1,9 @@
 using Optim
 
-const timepts_offset = 50
-@. exp_mono(t, p) = max(0, (1 - p[2]) * exp((timepts_offset+0.5-t) * p[1]) + p[2])
+@. exp_mono(t, p, t_med) = max(0, (1 - p[2]) * exp((t_med-t) * p[1]) + p[2])
 @. exp_bi(t, p) = max(0, (1 - p[4]) * p[1] * exp(-t * p[2]) + (1 - p[4]) * (1 - p[1]) * exp(-t * p[3]) + p[4])
 
-gen_cost_mono(t, f) = p -> sum((log.(f) .- log.(exp_mono(t, p))) .^ 2)
+gen_cost_mono(t, f, t_med) = p -> sum((log.(f) .- log.(exp_mono(t, p, t_med))) .^ 2)
 gen_cost_bi(t, f) = p -> sum((exp_bi(t, p) .- f) .^ 2)
 
 """
@@ -21,18 +20,19 @@ Arguments
 """
 function fit_bleach(f, t, plot_fit=true, use_mono=false, quantile_norm=0.5)
     timepts_norm = timepts_offset * 2
-    y = f ./ quantile(f[1:timepts_norm], quantile_norm)
+    y = f ./ quantile(f, quantile_norm)
+    t_med = quantile(1:length(y), quantile_norm)
 
     optim_opts = Optim.Options(g_tol=1e-15, iterations=1000)
 
-    f_cost_mono = gen_cost_mono(t, y)
+    f_cost_mono = gen_cost_mono(t, y, t_med)
     p0_mono = [0.01, 0.0]
     mono_fitted = optimize(f_cost_mono, p0_mono, Newton(), optim_opts,
         autodiff=:forward)
     p_fit_mono = mono_fitted.minimizer
 
     if use_mono
-        y_hat_mono = exp_mono(t, p_fit_mono)
+        y_hat_mono = exp_mono(t, p_fit_mono, t_med)
         resid_mono = y_hat_mono .- y
     else
         f_cost_bi = gen_cost_bi(t, y)
