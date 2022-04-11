@@ -19,7 +19,6 @@ Arguments
 * `use_mono`: use mono exponential model instead of double exponential model if true
 """
 function fit_bleach(f, t, plot_fit=true, use_mono=false, quantile_norm=0.5)
-    timepts_norm = timepts_offset * 2
     y = f ./ quantile(f, quantile_norm)
     t_med = quantile(1:length(y), quantile_norm)
 
