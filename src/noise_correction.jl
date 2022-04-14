@@ -61,23 +61,13 @@ Normalizes traces.
 - `traces::Dict`: Traces to normalize
 
 # Optional keyword arguments
-- `zero::Bool`: Whether to normalize to zero (so activities that are less than average would be negative). Default true.
+- `zero::Bool`: Whether to normalize to zero (so activities that are less than average would be negative). Default false.
 - `fn::Function`: Function that determines average neuron activity
 """
-function normalize_traces(traces::Dict; zero::Bool=true, fn::Function=mean)
-    new_traces = Dict()
-    for neuron in keys(traces)
-        if length(keys(traces[neuron])) == 0
-            continue
-        end
-        new_traces[neuron] = Dict()
-        s = fn([x for x in values(traces[neuron])])
-        for t in keys(traces[neuron])
-            new_traces[neuron][t] = traces[neuron][t] / s
-            if zero
-                new_traces[neuron][t] -= 1
-            end
-        end
+function normalize_traces(traces; zero::Bool=false, fn::Function=mean)
+    new_traces = zeros(size(traces))
+    for neuron in size(traces,1)
+        new_traces[neuron,:] .= traces[neuron,:] ./ fn(traces[neuron,:]) .- 1 .* zero
     end
     return new_traces
 end
@@ -107,11 +97,11 @@ end
 """
 Deconvolves traces to correct for GCaMP decay with respect to confocal volume time, `k`
 """
-function deconvolve_traces(traces::Dict, k::Real, max_t::Integer)
+function deconvolve_traces(traces, k::Real, max_t::Integer)
     g(t,k) = 2^(-t*k)*(1-2^(-k))
-    deconvolved_traces = Dict()
-    for n=keys(traces)
-        deconvolved_traces[n] = real.(ifft(fft([traces[n][t] for t=1:max_t])./fft([g(t-1,k) for t=1:max_t])))
+    deconvolved_traces = zeros(size(traces))
+    for n=1:size(traces,1)
+        deconvolved_traces[n,:] .= real.(ifft(fft(traces[n,:])./fft([g(t-1,k) for t=1:max_t])))
     end
     return deconvolved_traces
 end
@@ -119,17 +109,26 @@ end
 """
 Z-scores traces.
 """
-function zscore_traces(traces::Dict)
-    new_traces = Dict()
-    for neuron in keys(traces)
-        m = mean(collect(values(traces[neuron])))
-        s = std(collect(values(traces[neuron])))
-        new_traces[neuron] = Dict()
-        for t in keys(traces[neuron])
-            new_traces[neuron][t] = (traces[neuron][t] - m) / s
-        end
+function zscore_traces(traces)
+    new_traces = zeros(size(traces))
+    for neuron in 1:size(traces,1)
+        m = mean(traces[neuron,:])
+        s = std(traces[neuron,:])
+        new_traces[neuron, :] .= (traces[neuron,:] .- m) ./ s
     end
     return new_traces
+end
+
+"""
+Interpolate laser intensity from percentage on, and from measurements.
+"""
+function get_laser_intensity(percent_on, laser)
+    for i=2:size(laser,1)
+        if laser[i,1] > percent_on
+            frac_low = (laser[i,1] - percent_on) / (laser[i,1] - laser[i-1,1])
+            return frac_low * laser[i-1,2] + (1 - frac_low) * laser[i,2]
+        end
+    end
 end
 
 """
@@ -147,6 +146,7 @@ Applies multiple data processing steps to the traces. The order of processing st
 - Zscore
 
 # Arguments
+- `param::Dict`: Parameter dictionary containing laser information.
 - `activity_traces::Dict`: traces in the activity channel
 - `marker_traces::Dict`: traces in the marker channel
 - `threshold::Real`: Number of timepoint detections necessary to include a neuron in the analysis
@@ -161,14 +161,12 @@ Applies multiple data processing steps to the traces. The order of processing st
 - `denoise::Bool`: Whether to apply a total variation denoising step.
 - `bleach_corr::Bool`: Whether to bleach-correct the traces.
 - `divide::Bool`: Whether to divide the activity channel traces by the marker channel traces.
-- `normalize::Bool`: Whether to normalize the traces.
 - `normalize_fn::Function`: Function to use to get "average" activity when normalizing traces.
 - `k::Union{Real,Nothing}`: Deconvolution parameter. Set this to (time length of confocal volume) / (GCaMP decay half-life)
-- `zscore::Bool`: Whether to z-score the traces.
 """
-function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::Real, t_range; activity_bkg=nothing, marker_bkg=nothing,
-        min_intensity::Real=0, interpolate::Bool=false, denoise::Bool=false, bleach_corr::Bool=false, divide::Bool=false, normalize::Bool=false, normalize_fn::Function=mean,
-        k::Union{Real,Nothing}=nothing, zscore::Bool=false, fill_val=NaN)
+function process_traces(param::Dict, activity_traces::Dict, marker_traces::Dict, threshold::Real, t_range; activity_bkg=nothing, marker_bkg=nothing,
+        min_intensity::Real=0, interpolate::Bool=false, denoise::Bool=false, bleach_corr::Bool=false, divide::Bool=false, normalize_fn::Function=x->quantile(x,0.2),
+        k::Union{Real,Nothing}=nothing, valid_rois=nothing)
 
     activity_traces = copy(activity_traces)
     marker_traces = copy(marker_traces)
@@ -204,78 +202,59 @@ function process_traces(activity_traces::Dict, marker_traces::Dict, threshold::R
         marker_traces = interpolate_traces(marker_traces, t_range)
     end
 
-    # make traces array for futher processing
-    all_traces = [activity_traces, marker_traces]
-
-    for (idx, traces) in enumerate(all_traces)
-        traces_arr, hmap, valid_rois = make_traces_array(traces, threshold=threshold, replace_blank=true)
-
-        processed_traces_arr = traces_arr
-        data_dict = Dict()
-        data_dict["f"] = traces_arr
-        data_dict["idx_ok"] = 1:size(data_dict["f"])[1]
-
-        # denoise
-        if denoise
-            denoiser = DenoiserGSTV(100, 10.)
-            denoise!(data_dict, denoiser.f)
-            processed_traces_arr = data_dict["f_denoised"]
-        else
-            data_dict["f_denoised"] = data_dict["f"]
-        end
-
-        # bleach-correct
-        if bleach_corr
-            fit_bleach!(data_dict, idx_t=t_range)
-            processed_traces_arr[:,t_range] .= data_dict["f_bleach"]
-        end
-
-        # convert back to dictionary
-        all_traces[idx] = Dict()
-        for i in 1:length(valid_rois)
-            all_traces[idx][valid_rois[i]] = Dict()
-            for t in keys(activity_traces[valid_rois[i]])
-                if t in t_range
-                    all_traces[idx][valid_rois[i]][t] = processed_traces_arr[i,t]
-                end
-            end
-        end
-    end
-
-
     # divide activity by marker
     if divide
-        all_traces[1] = divide_by_marker_signal(all_traces[1], all_traces[2])
+        activity_traces = divide_by_marker_signal(activity_traces, marker_traces)
     end
 
-    # interpolate again in case of issues
-    if interpolate
-        all_traces[1] = interpolate_traces(all_traces[1], t_range)
+    traces_arr, hmap, valid_rois = make_traces_array(activity_traces, threshold=threshold, replace_blank=true, valid_rois=valid_rois)
+
+    processed_traces_arr = traces_arr
+
+
+
+    # correct for different laser intensities
+    if length(param["green_laser"]) > 1
+        ratio_1 = get_laser_intensity(param["blue_laser"][1], param["blue_laser_vals"]) / get_laser_intensity(param["green_laser"][1], param["green_laser_vals"])
+        ratio_2 = get_laser_intensity(param["blue_laser"][2], param["blue_laser_vals"]) / get_laser_intensity(param["green_laser"][2], param["green_laser_vals"])
+        ratio = ratio_1 / ratio_2
+        processed_traces_arr[:,param["max_graph_num"]+1:end] .*= ratio
     end
 
+    data_dict = Dict()
+    data_dict["f"] = traces_arr
+    data_dict["idx_ok"] = 1:size(data_dict["f"])[1]
 
-    if normalize
-        for idx=1:2
-            all_traces[idx] = normalize_traces(all_traces[idx], fn=normalize_fn)
-        end
+    # denoise
+    if denoise
+        denoiser = DenoiserGSTV(100, 10.)
+        denoise!(data_dict, denoiser.f)
+        processed_traces_arr = data_dict["f_denoised"]
+    else
+        data_dict["f_denoised"] = data_dict["f"]
     end
 
+    # bleach-correct
+    if bleach_corr
+        fit_bleach!(data_dict, true, true, idx_t=t_range)
+        processed_traces_arr[:,t_range] .= data_dict["f_bleach"]
+    end
 
+    # deconvolve
     if !isnothing(k)
         @assert(interpolate, "Cannot deconvolve non-interpolated traces")
         @assert(collect(t_range) == collect(1:maximum(t_range)), "Cannot deconvolve incomplete traces")
-        all_traces[1] = deconvolve_traces(all_traces[1], k, maximum(t_range))
+        processed_traces_arr = deconvolve_traces(processed_traces_arr, k, maximum(t_range))
     end
 
+    traces_normalized = normalize_traces(processed_traces_arr, fn=normalize_fn)
+    traces_zscored = zscore_traces(processed_traces_arr)
 
-    if zscore
-        for idx=1:2
-            all_traces[idx] = zscore_traces(all_traces[idx])
-        end
+    if bleach_corr
+        return processed_traces_arr, traces_normalized, traces_zscored, valid_rois, data_dict["bleach_param"], data_dict["bleach_curve"], data_dict["bleach_resid"]
+    else
+        return processed_traces_arr, traces_normalized, traces_zscored, valid_rois
     end
-
-
-    return all_traces
 end
 
 

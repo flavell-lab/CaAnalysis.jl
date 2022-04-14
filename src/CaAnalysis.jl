@@ -81,6 +81,7 @@ export import_data,
     interpolate_traces,
     zscore_traces,
     process_traces,
-    get_all_values
+    get_all_values,
+    get_laser_intensity
 
 end # module
