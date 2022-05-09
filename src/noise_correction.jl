@@ -66,7 +66,7 @@ Normalizes traces.
 """
 function normalize_traces(traces; zero::Bool=false, fn::Function=mean)
     new_traces = zeros(size(traces))
-    for neuron in size(traces,1)
+    for neuron in 1:size(traces,1)
         new_traces[neuron,:] .= traces[neuron,:] ./ fn(traces[neuron,:]) .- 1 .* zero
     end
     return new_traces
