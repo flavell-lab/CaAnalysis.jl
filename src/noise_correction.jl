@@ -215,8 +215,10 @@ function process_traces(param::Dict, activity_traces::Dict, marker_traces::Dict,
 
     # correct for different laser intensities
     if length(param["green_laser"]) > 1
-        ratio_1 = get_laser_intensity(param["blue_laser"][1], param["blue_laser_vals"]) / get_laser_intensity(param["green_laser"][1], param["green_laser_vals"])
-        ratio_2 = get_laser_intensity(param["blue_laser"][2], param["blue_laser_vals"]) / get_laser_intensity(param["green_laser"][2], param["green_laser_vals"])
+        blue_bkg = get_laser_intensity(0, param["blue_laser_vals"])
+        green_bkg = get_laser_intensity(0, param["green_laser_vals"])
+        ratio_1 = (get_laser_intensity(param["blue_laser"][1], param["blue_laser_vals"]) - blue_bkg) / (get_laser_intensity(param["green_laser"][1], param["green_laser_vals"]) - green_bkg)
+        ratio_2 = (get_laser_intensity(param["blue_laser"][2], param["blue_laser_vals"]) - blue_bkg) / (get_laser_intensity(param["green_laser"][2], param["green_laser_vals"]) - green_bkg)
         ratio = ratio_1 / ratio_2
         processed_traces_arr[:,param["max_graph_num"]+1:end] .*= ratio
     end
