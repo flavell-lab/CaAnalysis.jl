@@ -132,6 +132,38 @@ function get_laser_intensity(percent_on, laser)
 end
 
 """
+Interpolate laser intensity from `percent_on`, and from `intensity` measurments taken at `laser_perc` values.
+
+# Arguments:
+- `percent_on`: Laser percentage used in data acquisition.
+- `intensity`: Measured calibration intensities.
+- `laser_perc`: Measured laser percentages corresponding to those intensities.
+- `zero_thresh` (optional, default 4.5): Maximum percentage to use for 0 calibration
+- `min_laser` (optional, default 5.2): Minimum percentage to use for linear calibration
+- `max_interpolate` (optional, default 2.0): Maximum laser percentage difference to use for linear interpolation
+"""
+function get_laser_intensity(percent_on, intensity, laser_perc; zero_thresh=4.5, min_laser=5.2, max_laser=20.0, max_interpolate=2.0)
+    @assert(max_laser - min_laser >= max_interpolate, "Cannot interpolate over invalid laser intensities.")
+    @assert(percent_on >= min_laser)
+    @assert(percent_on <= max_laser)
+    zero_max = argmax(1.0 ./ (laser_perc .- zero_thresh))
+    baseline = median(intensity[1:zero_max])
+
+    min_x = max(min_laser, percent_on-max_interpolate/2.0)
+    max_x = min(min_x + max_interpolate, max_laser)
+    if max_x == max_laser
+        min_x = max_x - max_interpolate
+    end
+
+    min_l = argmax(1.0 ./ (laser_perc .- min_x))        
+    max_l = argmax(1.0 ./ (laser_perc .- max_x))
+
+
+    a, b = [ones(length(laser_perc[min_l:max_l]), 1) laser_perc[min_l:max_l]] \ intensity[min_l:max_l]
+    return a + b * percent_on - baseline
+end
+
+"""
 Applies multiple data processing steps to the traces. The order of processing steps is:
 
 - Background-subtraction
@@ -195,6 +227,38 @@ function process_traces(param::Dict, activity_traces::Dict, marker_traces::Dict,
         end
     end
 
+    blue_1 = get_laser_intensity(param["blue_laser"][1], param["blue_laser_intensity"], param["blue_laser_perc"], zero_thresh=param["blue_zero_thresh"], min_laser=param["blue_min_laser"], max_laser=maximum(param["blue_laser_perc"]), max_interpolate=param["blue_max_interpolate"])
+    blue_2 = blue_1
+    # correct for different laser intensities
+    if length(param["blue_laser"]) > 1
+        @assert(length(param["blue_laser"]) == 2, "More than 1 laser intensity switch not supported.")
+        blue_2 = get_laser_intensity(param["blue_laser"][2], param["blue_laser_intensity"], param["blue_laser_perc"], zero_thresh=param["blue_zero_thresh"], min_laser=param["blue_min_laser"], max_laser=maximum(param["blue_laser_perc"]), max_interpolate=param["blue_max_interpolate"])
+        ratio_blue = blue_1 / blue_2
+        for roi in keys(activity_traces)
+            for t in keys(activity_traces[roi])
+                if t > param["max_graph_num"]
+                    activity_traces[roi][t] = ratio_blue * activity_traces[roi][t]
+                end
+            end
+        end
+    end
+    
+    if length(param["green_laser"]) > 1
+        @assert(length(param["green_laser"]) == 2, "More than 1 laser intensity switch not supported.")
+        intensity_g = h5read("/data1/shared/2022-05-11-laser-power.h5", "561nm/1/intensity")
+        laser_perc_g = h5read("/data1/shared/2022-05-11-laser-power.h5", "561nm/1/laser_percent")
+        ratio_1 = get_laser_intensity(param["green_laser"][1], param["green_laser_intensity"], param["green_laser_perc"], zero_thresh=param["green_zero_thresh"], min_laser=param["green_min_laser"], max_laser=maximum(param["green_laser_perc"]), max_interpolate=param["green_max_interpolate"])
+        ratio_2 = get_laser_intensity(param["green_laser"][2], param["green_laser_intensity"], param["green_laser_perc"], zero_thresh=param["green_zero_thresh"], min_laser=param["green_min_laser"], max_laser=maximum(param["green_laser_perc"]), max_interpolate=param["green_max_interpolate"])
+        ratio = ratio_1 / ratio_2
+        for roi in keys(marker_traces)
+            for t in keys(marker_traces[roi])
+                if t > param["max_graph_num"]
+                    marker_traces[roi][t] = ratio * marker_traces[roi][t]
+                end
+            end
+        end
+    end
+
 
     # interpolate traces
     if interpolate
@@ -210,16 +274,6 @@ function process_traces(param::Dict, activity_traces::Dict, marker_traces::Dict,
     traces_arr, hmap, valid_rois = make_traces_array(activity_traces, threshold=threshold, replace_blank=true, valid_rois=valid_rois)
 
     processed_traces_arr = traces_arr
-
-
-
-    # correct for different laser intensities
-    if length(param["green_laser"]) > 1
-        ratio_1 = get_laser_intensity(param["blue_laser"][1], param["blue_laser_vals"]) / get_laser_intensity(param["green_laser"][1], param["green_laser_vals"])
-        ratio_2 = get_laser_intensity(param["blue_laser"][2], param["blue_laser_vals"]) / get_laser_intensity(param["green_laser"][2], param["green_laser_vals"])
-        ratio = ratio_1 / ratio_2
-        processed_traces_arr[:,param["max_graph_num"]+1:end] .*= ratio
-    end
 
     data_dict = Dict()
     data_dict["f"] = traces_arr
