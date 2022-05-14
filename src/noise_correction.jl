@@ -145,7 +145,6 @@ Interpolate laser intensity from `percent_on`, and from `intensity` measurments 
 function get_laser_intensity(percent_on, intensity, laser_perc; zero_thresh=4.5, min_laser=5.2, max_laser=20.0, max_interpolate=2.0)
     @assert(max_laser - min_laser >= max_interpolate, "Cannot interpolate over invalid laser intensities.")
     @assert(percent_on >= min_laser)
-    @assert(percent_on <= max_laser)
     zero_max = argmax(1.0 ./ (laser_perc .- zero_thresh))
     baseline = median(intensity[1:zero_max])
 
