@@ -1,4 +1,6 @@
 """
+    divide_by_marker_signal(traces::Dict, marker_traces::Dict)
+
 Divides the activity traces `traces::Dict` by the marker signal `marker_traces::Dict`
 """
 function divide_by_marker_signal(traces::Dict, marker_traces::Dict)
@@ -16,6 +18,8 @@ end
 
 
 """
+    get_background(timepts, get_basename::Function, nrrd_path::String, ch::Int)
+
 Gets the background camera intensity from the NRRD files to be subtracted.
 
 # Arguments
@@ -33,6 +37,8 @@ function get_background(timepts, get_basename::Function, nrrd_path::String, ch::
 end
 
 """
+    bkg_subtract(traces::Dict, frame_bkg)
+
 Subtracts from `traces` the corresponding background `frame_bkg`.
 """
 function bkg_subtract(traces::Dict, frame_bkg)
@@ -55,6 +61,8 @@ function bkg_subtract(traces::Dict, frame_bkg)
 end
 
 """
+    normalize_traces(traces; zero::Bool=false, fn::Function=mean)
+
 Normalizes traces.
 
 # Arguments
@@ -73,6 +81,8 @@ function normalize_traces(traces; zero::Bool=false, fn::Function=mean)
 end
 
 """
+    interpolate_traces(traces::Dict, t_range; itp_method=Linear(), extrap_method=Interpolations.Flat(), fill_val=NaN)
+
 Interpolates data at missing time points.
 
 # Arguments
@@ -95,6 +105,8 @@ function interpolate_traces(traces::Dict, t_range; itp_method=Linear(), extrap_m
 end
 
 """
+    deconvolve_traces(traces, k::Real, max_t::Integer)
+
 Deconvolves traces to correct for GCaMP decay with respect to confocal volume time, `k`
 """
 function deconvolve_traces(traces, k::Real, max_t::Integer)
@@ -107,6 +119,8 @@ function deconvolve_traces(traces, k::Real, max_t::Integer)
 end
 
 """
+    zscore_traces(traces)
+
 Z-scores traces.
 """
 function zscore_traces(traces)
@@ -120,6 +134,8 @@ function zscore_traces(traces)
 end
 
 """
+    get_laser_intensity(percent_on, laser)
+
 Interpolate laser intensity from percentage on, and from measurements.
 """
 function get_laser_intensity(percent_on, laser)
@@ -132,6 +148,8 @@ function get_laser_intensity(percent_on, laser)
 end
 
 """
+    get_laser_intensity(percent_on, intensity, laser_perc; zero_thresh=4.5, min_laser=5.2, max_laser=20.0, max_interpolate=2.0)
+
 Interpolate laser intensity from `percent_on`, and from `intensity` measurments taken at `laser_perc` values.
 
 # Arguments:
@@ -163,6 +181,13 @@ function get_laser_intensity(percent_on, intensity, laser_perc; zero_thresh=4.5,
 end
 
 """
+    process_traces(
+        param::Dict, activity_traces::Dict, marker_traces::Dict, threshold::Real, t_range; 
+        activity_bkg=nothing, marker_bkg=nothing, min_intensity::Real=0, interpolate::Bool=false, 
+        denoise::Bool=false, bleach_corr::Bool=false, divide::Bool=false, normalize_fn::Function=x->quantile(x,0.2),
+        k::Union{Real,Nothing}=nothing, valid_rois=nothing
+    )
+
 Applies multiple data processing steps to the traces. The order of processing steps is:
 
 - Background-subtraction
@@ -312,6 +337,8 @@ end
 
 
 """
+    get_all_values(processed_traces)
+
 Gets all values from a set of processed traces. Ensure that the traces have been normalized prior to using this function!
 """
 function get_all_values(processed_traces)

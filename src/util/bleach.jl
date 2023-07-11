@@ -7,7 +7,7 @@ gen_cost_mono(t, f, t_med) = p -> sum((log.(f) .- log.(exp_mono(t, p, t_med))) .
 gen_cost_bi(t, f) = p -> sum((exp_bi(t, p) .- f) .^ 2)
 
 """
-    fit_bleach(f, t, plot_fit=true, use_mono=false)
+    fit_bleach(f, t, plot_fit=true, use_mono=false, quantile_norm=0.5)
 
 Fits double exponential bleaching model.
 
@@ -63,7 +63,7 @@ function fit_bleach(f, t, plot_fit=true, use_mono=false, quantile_norm=0.5)
 end
 
 """
-    fit_bleach(f::Array{<:Real,2}, plot_fit=true)
+    fit_bleach(f::Array{<:Real,2}, plot_fit=true, use_mono=false; idx_t=:all)
 
 Calculates mean activity across the units and fits the double exponential
 bleaching model.
@@ -85,8 +85,7 @@ function fit_bleach(f::Array{<:Real,2}, plot_fit=true, use_mono=false; idx_t=:al
 end
 
 """
-    fit_bleach(data_dict::Dict, plot_fit=true, use_mono=false; data_key="f_denoised",
-        idx_unit=:ok, idx_t=:all)
+    fit_bleach!(data_dict::Dict, plot_fit=true, use_mono=false; data_key="f_denoised", idx_unit=:ok, idx_t=:all)
 
 Calculates mean activity across the units and fits the double exponential.
 
