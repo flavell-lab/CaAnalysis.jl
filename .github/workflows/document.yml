@@ -83,12 +83,12 @@ jobs:
       - uses: actions/checkout@master
         with:
           repository: flavell-lab/RegistrationGraph.jl
-          path: ./SLURMManager.jl
+          path: ./RegistrationGraph.jl
           token: ${{ secrets.GOLDENRATIO1618_ACCESS_TOKEN }}
       - uses: actions/checkout@master
         with:
           repository: flavell-lab/ExtractRegisteredData.jl
-          path: ./SLURMManager.jl
+          path: ./ExtractRegisteredData.jl
           token: ${{ secrets.GOLDENRATIO1618_ACCESS_TOKEN }}
       - uses: actions/checkout@master
         with:
