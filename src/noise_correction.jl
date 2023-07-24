@@ -66,7 +66,7 @@ end
 Normalizes traces.
 
 # Arguments
-- `traces::Dict`: Traces to normalize
+- `traces`: Traces array to normalize
 
 # Optional keyword arguments
 - `zero::Bool`: Whether to normalize to zero (so activities that are less than average would be negative). Default false.
