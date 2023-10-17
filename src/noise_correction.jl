@@ -270,8 +270,6 @@ function process_traces(param::Dict, activity_traces::Dict, marker_traces::Dict,
     
     if length(param["green_laser"]) > 1
         @assert(length(param["green_laser"]) == 2, "More than 1 laser intensity switch not supported.")
-        intensity_g = h5read("/data1/shared/2022-05-11-laser-power.h5", "561nm/1/intensity")
-        laser_perc_g = h5read("/data1/shared/2022-05-11-laser-power.h5", "561nm/1/laser_percent")
         ratio_1 = get_laser_intensity(param["green_laser"][1], param["green_laser_intensity"], param["green_laser_perc"], zero_thresh=param["green_zero_thresh"], min_laser=param["green_min_laser"], max_laser=maximum(param["green_laser_perc"]), max_interpolate=param["green_max_interpolate"])
         ratio_2 = get_laser_intensity(param["green_laser"][2], param["green_laser_intensity"], param["green_laser_perc"], zero_thresh=param["green_zero_thresh"], min_laser=param["green_min_laser"], max_laser=maximum(param["green_laser_perc"]), max_interpolate=param["green_max_interpolate"])
         ratio = ratio_1 / ratio_2
