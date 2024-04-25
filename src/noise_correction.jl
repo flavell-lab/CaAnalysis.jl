@@ -223,7 +223,7 @@ Applies multiple data processing steps to the traces. The order of processing st
 """
 function process_traces(param::Dict, activity_traces::Dict, marker_traces::Dict, threshold::Real, t_range; activity_bkg=nothing, marker_bkg=nothing,
         min_intensity::Real=0, interpolate::Bool=false, denoise::Bool=false, bleach_corr::Bool=false, divide::Bool=false, normalize_fn::Function=x->quantile(x,0.2),
-        k::Union{Real,Nothing}=nothing, valid_rois=nothing)
+        k::Union{Real,Nothing}=nothing, valid_rois=nothing, plot_bleach::Bool=false)
 
     activity_traces = copy(activity_traces)
     marker_traces = copy(marker_traces)
@@ -313,7 +313,7 @@ function process_traces(param::Dict, activity_traces::Dict, marker_traces::Dict,
 
     # bleach-correct
     if bleach_corr
-        fit_bleach!(data_dict, true, true, idx_t=t_range)
+        fit_bleach!(data_dict, plot_bleach, true, idx_t=t_range)
         processed_traces_arr[:,t_range] .= data_dict["f_bleach"]
     end
 
